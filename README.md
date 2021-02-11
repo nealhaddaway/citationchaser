@@ -4,7 +4,7 @@ In searching for research articles, we often want to obtain lists of references 
 
 Traditionally, this process would be done manually, and the resulting records would need to be checked one-by-one against included studies in a review to identify potentially relevant records that should be included in a review. 
 
-This package contains functions to automate this process by making use of the Lens.org API. An input article list can be used to return a list of all referenced records, and/or all citing records in the Lens.org database (consisting of PubMed, PubMed Central, CrossRef, Microsoft Academic Graph and CORE; 'https://www.lens.org').
+This package contains functions to automate this process by making use of the Lens.org API. An input article list can be used to return a list of all referenced records, and/or all citing records in the Lens.org database (consisting of PubMed, PubMed Central, CrossRef, Microsoft Academic Graph and CORE; 'https://www.lens.org'). USERS MUST OBTAIN A TOKEN FOR THE LENS.ORG SCHOLARLY API (<a href="https://www.lens.org/lens/user/subscriptions#scholar" target="_blank">available for free here</a>).
 
 Please cite as:<br>
 Neal R Haddaway. 2021. citationchaser: an R package for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4287835" target="_blank">10.5281/zenodo.4287835</a><br>
