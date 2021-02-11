@@ -27,10 +27,14 @@ Imports:
   httr,
   jsonlite,
   utils
+Suggests:
+  knitr,
+  rmarkdown
+VignetteBuilder: knitr
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Suggests: 
-    testthat
+Depends: 
+    R (>= 2.10)

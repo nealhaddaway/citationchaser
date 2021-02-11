@@ -29,7 +29,7 @@
 #' @importFrom expss vlookup
 #' @importFrom httr content
 #' @importFrom jsonlite fromJSON
-#' @importFrom utils read.csv write.table
+#' @importFrom utils write.table
 #' @export
 #' @examples
 #' \dontrun{
@@ -65,7 +65,7 @@ get_refs <- function(article_list,
   # convert json output from article search to list
   record_list <- jsonlite::fromJSON(record_json) 
   record_listdb <- as.data.frame(jsonlite::fromJSON(record_json))
-  
+  input_number <- record_list[["total"]]
   
   if (get_records == 'citations') {
     
@@ -73,15 +73,17 @@ get_refs <- function(article_list,
     citation_count <- record_list[["data"]][["scholarly_citations_count"]]
     all_citations <- sum(citation_count, na.rm = TRUE)
     citations <- unlist(record_list[["data"]][["scholarly_citations"]])
+    citations_unique <- unique(citations)
     
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
-                                paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'))
+                                paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
+                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.')
     
     # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
     request2_cit <- paste0('{
 	"query": {
 		"terms": {
-			"lens_id": [', paste0('"', paste(citations, collapse = '", "'), '"'), ']
+			"lens_id": [', paste0('"', paste(citations_unique, collapse = '", "'), '"'), ']
 		}
 	},
 	"size":1000
@@ -96,7 +98,10 @@ get_refs <- function(article_list,
     download_report_cit <- paste0('Your query returned ', record_list2_cit[["total"]], ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- read.csv("inst/extdata/type.csv")
+    
+    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
+                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
+                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_cit <- record_list2_cit[["data"]][["publication_type"]]
     authors_cit <- list()
     for (i in 1:length(record_list2_cit[["data"]][["authors"]])) {
@@ -151,7 +156,6 @@ get_refs <- function(article_list,
     
     # deduplicate shared references and build deduplication report
     references <- unique(references)
-    input_number <- record_list[["total"]]
     deduped_citations <- length(references)
     duplicates <- all_refs - deduped_citations
     stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_refs, ' references. The input articles contained the following identifiable references on lens.org: \n',
@@ -177,7 +181,9 @@ get_refs <- function(article_list,
     download_report_ref <- paste0('Your query returned ', record_list2_ref[["total"]], ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- read.csv("inst/extdata/type.csv")
+    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
+                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
+                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_ref <- record_list2_ref[["data"]][["publication_type"]]
     authors_ref <- list()
     for (i in 1:length(record_list2_ref[["data"]][["authors"]])) {
@@ -258,7 +264,9 @@ get_refs <- function(article_list,
     download_report_ref <- paste0('Your query returned ', record_list2_ref[["total"]], ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- read.csv("inst/extdata/type.csv")
+    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
+                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
+                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_ref <- record_list2_ref[["data"]][["publication_type"]]
     authors_ref <- list()
     for (i in 1:length(record_list2_ref[["data"]][["authors"]])) {
@@ -308,15 +316,17 @@ get_refs <- function(article_list,
     citation_count <- record_list[["data"]][["scholarly_citations_count"]]
     all_citations <- sum(citation_count, na.rm = TRUE)
     citations <- unlist(record_list[["data"]][["scholarly_citations"]])
+    citations_unique <- unique(citations)
     
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
-                                paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'))
+                                paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
+                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.')
     
     # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
     request2_cit <- paste0('{
 	"query": {
 		"terms": {
-			"lens_id": [', paste0('"', paste(citations, collapse = '", "'), '"'), ']
+			"lens_id": [', paste0('"', paste(citations_unique, collapse = '", "'), '"'), ']
 		}
 	},
 	"size":1000
@@ -331,7 +341,9 @@ get_refs <- function(article_list,
     download_report_cit <- paste0('Your query returned ', record_list2_cit[["total"]], ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- read.csv("inst/extdata/type.csv")
+    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
+                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
+                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_cit <- record_list2_cit[["data"]][["publication_type"]]
     authors_cit <- list()
     for (i in 1:length(record_list2_cit[["data"]][["authors"]])) {
