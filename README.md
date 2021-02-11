@@ -7,10 +7,12 @@ Traditionally, this process would be done manually, and the resulting records wo
 This package contains functions to automate this process by making use of the Lens.org API. An input article list can be used to return a list of all referenced records, and/or all citing records in the Lens.org database (consisting of PubMed, PubMed Central, CrossRef, Microsoft Academic Graph and CORE; 'https://www.lens.org'). USERS MUST OBTAIN A TOKEN FOR THE LENS.ORG SCHOLARLY API (<a href="https://www.lens.org/lens/user/subscriptions#scholar" target="_blank">available for free here</a>).
 
 Please cite as:<br>
-Neal R Haddaway. 2021. citationchaser: an R package for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4287835" target="_blank">10.5281/zenodo.4287835</a><br>
-<a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/PRISMA2020/master/inst/extdata/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
+Neal R Haddaway. 2021. citationchaser: an R package for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4533747" target="_blank">10.5281/zenodo.4533747</a><br>
+<a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/citationchaser/master/inst/extdata/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
 
 <!-- badges: start -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4533747.svg)](https://doi.org/10.5281/zenodo.4533747)
+
 ![GitHub all releases](https://img.shields.io/github/downloads/nealhaddaway/citationchaser/total)
 ![GitHub Release Date](https://img.shields.io/github/release-date/nealhaddaway/citationchaser)
 ![GitHub R package version](https://img.shields.io/github/r-package/v/nealhaddaway/citationchaser)
