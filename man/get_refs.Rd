@@ -31,7 +31,7 @@ applying for scholarly API access and creating a token once approved. See
 \value{
 An RIS file is saved to the working directory. A report is printed
 to the console. If 'save_object=TRUE', the RIS file is returned as an
-object.
+object
 }
 \description{
 This function takes a list of articles in the form of established
@@ -41,4 +41,14 @@ form of lists of lens IDs), and then query these lens IDs to bring back full
 citation information for all listed records. Deduplicates references to the
 same records across articles, resulting in an RIS file and a summary report
 in the console.
+}
+\examples{
+\dontrun{
+article_list <- c("10.1007/978-3-642-37048-9_13", 
+                  "10.1111/sum.12030", 
+                  "10.5194/bg-13-3619-2016", 
+                  "10.1016/j.agee.2012.09.006")
+  refs <- get_refs(article_list, get_records = 'both')
+  refs
+  }
 }

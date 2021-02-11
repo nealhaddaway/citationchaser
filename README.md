@@ -1,22 +1,15 @@
-# PRISMA2020 Flow Diagram <img src="PRISMA2020-hex.png" align="right" width="15%"/>
+# citationchaser <img src="inst/extdata/citationchaser.png" align="right" width="15%"/>
 
-You can use this package to produce a flow diagram that conforms to the PRISMA 2020 preprint standards using the `PRISMA_flowdiagram()` function. The data can be manually entered into the function, or loaded up using the template CSV file provided in 'INST/EXTDATA/'. The function, (if 'interactive = TRUE') produces an interactive HTML ouput with each box linking to a specific page (e.g. of search results or methods details), and hover-over tooltips for further information. 
-<br>
-<img src="inst/extdata/PRISMA.png" width="70%" />
-<br>
-The 'Previous' and 'Other' study arms of the flowchart can be toggled on and off and removed or added to the diagram by specifying this in the function inputs.
-
-A static version is produced otherwise. <a href="https://srflowdiagram.github.io/template.html" target="_blank">
-  
-See the interactive template here.</a><br>
+In searching for research articles, we often want to obtain lists of references from across studies, and also obtain lists of articles that cite a particular study. In systematic reviews, this supplementary search technique is known as 'citation chasing': forward citation chasing looks for all records citing one or more articles of known relevance; backward ciation chasing looks for all records referenced in one or more articles. Traditionally, this process would be done manually, and the resulting records would need to be checked one-by-one against included studies in a review to identify potentially relevant records that should be included in a review. This package contains functions to automate this process by making use of the Lens.org API. An input article list can be used to return a list of all referenced records, and/or all citing records in the Lens.org database (consisting of PubMed, PubMed Central, CrossRef, Microsoft Academic Graph and CORE; 'https://www.lens.org').
 
 Please cite as:<br>
-Neal R Haddaway, Luke A McGuinness. 2020. PRISMA2020: R package and ShinyApp for producing PRISMA 2020 compliant flow diagrams. doi: <a href="https://doi.org/10.5281/zenodo.4287835" target="_blank">10.5281/zenodo.4287835</a><br>
+Neal R Haddaway. 2021. citationchaser: an R package for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4287835" target="_blank">10.5281/zenodo.4287835</a><br>
 <a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/PRISMA2020/master/inst/extdata/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
 
 <!-- badges: start -->
-[![R build status](https://github.com/nealhaddaway/PRISMA2020/workflows/R-CMD-check/badge.svg/)](https://github.com/nealhaddaway/PRISMA2020/actions/)
-[![HitCount](https://hits.dwyl.com/nealhaddaway/nealhaddaway/PRISMA2020.svg/)](https://hits.dwyl.com/nealhaddaway/nealhaddaway/PRISMA2020/)
-![GitHub all releases](https://img.shields.io/github/downloads/nealhaddaway/PRISMA2020/total?style=plastic/)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/nealhaddaway/PRISMA2020)
+![GitHub all releases](https://img.shields.io/github/downloads/nealhaddaway/citationchaser/total)
+![GitHub R package version](https://img.shields.io/github/r-package/v/nealhaddaway/citationchaser)
+![GitHub Repo stars](https://img.shields.io/github/stars/nealhaddaway/citationchaser?style=social)
+![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fwww.twitter.com%2Fnealhaddaway)
+![GitHub Release Date](https://img.shields.io/github/release-date/nealhaddaway/citationchaser)
 <!-- badges: end -->
