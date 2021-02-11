@@ -8,12 +8,9 @@ Neal R Haddaway. 2021. citationchaser: an R package for forward and backward cit
 
 <!-- badges: start -->
 ![GitHub all releases](https://img.shields.io/github/downloads/nealhaddaway/citationchaser/total)
-
+![GitHub Release Date](https://img.shields.io/github/release-date/nealhaddaway/citationchaser)
 ![GitHub R package version](https://img.shields.io/github/r-package/v/nealhaddaway/citationchaser)
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/nealhaddaway/citationchaser?style=social)
-
 ![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fwww.twitter.com%2Fnealhaddaway)
-
-![GitHub Release Date](https://img.shields.io/github/release-date/nealhaddaway/citationchaser)
 <!-- badges: end -->
