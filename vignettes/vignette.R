@@ -10,5 +10,5 @@ article_list <- c("10.1007/978-3-642-37048-9_13", "10.1111/sum.12030", "10.5194/
 ## ---- echo=TRUE---------------------------------------------------------------
 get_refs(article_list, 
          get_records = 'references', 
-         token = 'K4FaRccEYJJgd0MaSUVy1MXNcgzvB1Y25PWfyEeNicqxmndHKk0v')
+         token = '&#39;K4FaRccEYJ---REDACTED---ndHKk0v&#39')
 

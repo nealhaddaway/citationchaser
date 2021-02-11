@@ -46,7 +46,7 @@ All we need to do now is specify some settings and bring back the reference list
 ```{r, echo=TRUE}
 get_refs(article_list, 
          get_records = 'references', 
-         token = 'K4FaRccEYJJgd0MaSUVy1MXNcgzvB1Y25PWfyEeNicqxmndHKk0v')
+         token = '&#39;K4FaRccEYJ---REDACTED---ndHKk0v&#39')
 ```
 
 The report printed to the console describes what was found on lens.org, and the RIS file containing our results is saved to our working directory. In you choose to search for citations and references (get_records = 'both') then you will have two reports and two RIS files. 
