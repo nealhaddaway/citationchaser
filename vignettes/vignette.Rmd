@@ -33,7 +33,7 @@ citationchaser takes as its input key identification information for one or more
 ## Using citationchaser
 Let's say we have four articles and we want to know who they cited. In this case we will begin with a list of DOIs (digital object identifiers), but you could also use PubMed IDs (or PubMed Central IDs), Core IDs, or Microsoft Academic IDs. The function will work with article titles, but the sensitivity is likely to be low, since many articles have very similar titles, and minor punctuation differences in how records are indexed in databases may make it impossible to find them. DOIs are widely used and highly specific, so that's a good place to start:
 
-```{r, echo=TRUE}
+```{r, eval=FALSE}
 devtools::install_github("nealhaddaway/citationchaser")
 library(citationchaser)
 article_list <- c("10.1007/978-3-642-37048-9_13", "10.1111/sum.12030", "10.5194/bg-13-3619-2016", "10.1016/j.agee.2012.09.006")
