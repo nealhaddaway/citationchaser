@@ -5,6 +5,11 @@ library(shiny)
 library(DT)
 library(shinycssloaders)
 library(data.table)
+library(tibble)
+library(dplyr)
+library(httr)
+library(expss)
+library(scales)
 
 source('functions.R')
 

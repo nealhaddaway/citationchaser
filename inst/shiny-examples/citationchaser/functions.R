@@ -179,8 +179,9 @@ get_refs <- function(article_list,
     # ris build report
     ris_records_cit <- lengths(regmatches(level1_ris_cit, gregexpr("TY  - ", level1_ris_cit)))
     
-    stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. In total, this corresponds to a total of ', 
-                                length(citations_unique), ' IDs. Your RIS file is ready for download and contains ', ris_records_cit, ' records exported from Lens.org.')
+    stage1_report_cit <- paste0('Your ', scales::comma(input_number), ' articles were cited a total of ', scales::comma(all_citations), ' times. This corresponds to ', 
+                                scales::comma(length(citations_unique)), ' unique article IDs. Your RIS file is ready for download and contains ', 
+                                scales::comma(ris_records_cit), ' records exported from Lens.org.')
     
     report_cit <- stage1_report_cit
     
@@ -298,8 +299,8 @@ get_refs <- function(article_list,
     # ris build report
     ris_records_ref <- lengths(regmatches(level1_ris_ref, gregexpr("TY  - ", level1_ris_ref)))
     
-    stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. This corresponds to ', 
-                                deduped_references, ' unique IDs. Your RIS file is ready for download and contains ', ris_records_ref, ' records exported from Lens.org.')
+    stage1_report_ref <- paste0('Your ', scales::comma(input_number), ' articles contained a total of ', scales::comma(all_references), ' references. This corresponds to ', 
+                                scales::comma(deduped_references), ' unique IDs. Your RIS file is ready for download and contains ', scales::comma(ris_records_ref), ' records exported from Lens.org.')
     
     report_ref <- stage1_report_ref
     
