@@ -33,7 +33,7 @@ citationchaser takes as its input key identification information for one or more
 ## Using citationchaser
 Let's say we have four articles and we want to know who they cited. In this case we will begin with a list of DOIs (digital object identifiers), but you could also use PubMed IDs (or PubMed Central IDs), Core IDs, or Microsoft Academic IDs. The function will work with article titles, but the sensitivity is likely to be low, since many articles have very similar titles, and minor punctuation differences in how records are indexed in databases may make it impossible to find them. DOIs are widely used and highly specific, so that's a good place to start:
 
-```{r, eval=FALSE}
+```{r, eval=TRUE, echo=FALSE}
 devtools::install_github("nealhaddaway/citationchaser")
 library(citationchaser)
 article_list <- c("10.1007/978-3-642-37048-9_13", "10.1111/sum.12030", "10.5194/bg-13-3619-2016", "10.1016/j.agee.2012.09.006")
@@ -44,11 +44,9 @@ The DOIs need to be provided in short form - please remove the 'https://doi.org/
 All we need to do now is specify some settings and bring back the reference lists of all four articles. 'get_records' tells the function which direction to search for citations: in this case references in the starting articles. The 'token' is provided by Lens.org after applying ot use the service. It is a unique code that allows us to send queries to the server. We are limmited by the API infrastructure to 10 requests per minute, so the function will take a short amount of time to run.
 
 ```{r, echo=TRUE}
-get_refs(article_list, 
+citationchaser::get_refs(article_list, 
          get_records = 'references', 
-         token = '&#39;K4FaRccEYJ---REDACTED---ndHKk0v&#39')
+         token = 'WCFlpCtuJXYI---redacted---OEM5JTQRNXB9w')
 ```
 
 The report printed to the console describes what was found on lens.org, and the RIS file containing our results is saved to our working directory. In you choose to search for citations and references (get_records = 'both') then you will have two reports and two RIS files. 
-
-Another current limitation of the package as it stands is that each query is limited to 1,000 records (anything beyond this isn't returned). If your download contains 1,000 records or more, for now it's best to split the input article list up to avoid losing information. The next version of the package will allow multiple requests in batches of <1,000 to circumvent this limitation. Thanks for bearing with me!
