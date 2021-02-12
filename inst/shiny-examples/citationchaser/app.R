@@ -184,7 +184,7 @@ server <- function(input, output) {
     # render articles table
     output$article_ref <- renderDataTable({
         rv$articles
-    }, options = list(dom = 't'), rownames = FALSE)
+    }, options = list(dom = 'tpl'), rownames = FALSE)
     # download articles as RIS
     output$input_ris <- downloadHandler(
         filename = function(){
