@@ -1,0 +1,10 @@
+name: citationchaser
+title:
+username:
+account: estech
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3624008
+bundleId: 4214092
+url: https://estech.shinyapps.io/citationchaser/
+when: 1613123077.64854
