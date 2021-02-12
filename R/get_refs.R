@@ -31,7 +31,7 @@
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils write.table
 #' @importFrom tibble tibble
-#' @importFrom dplyr mutate group_split
+#' @importFrom dplyr mutate group_split bind_rows
 #' @export
 #' @examples
 #' \dontrun{
