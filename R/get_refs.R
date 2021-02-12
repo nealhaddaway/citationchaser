@@ -31,7 +31,7 @@
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils write.table
 #' @importFrom tibble tibble
-#' @importFrom dplyr mutate
+#' @importFrom dplyr mutate group_split
 #' @export
 #' @examples
 #' \dontrun{
@@ -94,7 +94,7 @@ get_refs <- function(article_list,
     
     
     # get a list of vectors of the ids
-    citgroups <-group_split(cit_counts_df, export_group) 
+    citgroups <- dplyr::group_split(cit_counts_df, export_group) 
     
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
                                 paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
@@ -211,7 +211,7 @@ get_refs <- function(article_list,
     
     
     # get a list of vectors of the ids
-    refgroups <-group_split(ref_counts_df, export_group) 
+    refgroups <- dplyr::group_split(ref_counts_df, export_group) 
     
     stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. The input articles contained the following identifiable references on lens.org: \n',
                                 paste(paste0('doi: ', article_list, ', references: ', record_list[["data"]][["references_count"]]), collapse = '\n'),
@@ -326,7 +326,7 @@ get_refs <- function(article_list,
     
     
     # get a list of vectors of the ids
-    refgroups <-group_split(ref_counts_df, export_group) 
+    refgroups <- dplyr::group_split(ref_counts_df, export_group) 
     
     stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. The input articles contained the following identifiable references on lens.org: \n',
                                 paste(paste0('doi: ', article_list, ', references: ', record_list[["data"]][["references_count"]]), collapse = '\n'),
@@ -437,7 +437,7 @@ get_refs <- function(article_list,
     
     
     # get a list of vectors of the ids
-    citgroups <-group_split(cit_counts_df, export_group) 
+    citgroups <- dplyr::group_split(cit_counts_df, export_group) 
     
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
                                 paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
