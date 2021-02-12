@@ -6,6 +6,8 @@ Traditionally, this process would be done manually, and the resulting records wo
 
 This package contains functions to automate this process by making use of the Lens.org API. An input article list can be used to return a list of all referenced records, and/or all citing records in the Lens.org database (consisting of PubMed, PubMed Central, CrossRef, Microsoft Academic Graph and CORE; 'https://www.lens.org'). USERS MUST OBTAIN A TOKEN FOR THE LENS.ORG SCHOLARLY API (<a href="https://www.lens.org/lens/user/subscriptions#scholar" target="_blank">available for free here</a>).
 
+A shiny app version of the package is available [here](https://estech.shinyapps.io/citationchaser/).
+
 Please cite as:<br>
 Neal R Haddaway. 2021. citationchaser: an R package for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4533747" target="_blank">10.5281/zenodo.4533747</a><br>
 <a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/citationchaser/master/inst/extdata/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
