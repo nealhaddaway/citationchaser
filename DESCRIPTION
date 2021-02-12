@@ -23,9 +23,11 @@ Description: In searching for research articles, we often want to
   database (consisting of PubMed, PubMed Central, CrossRef, Microsoft 
   Academic Graph and CORE; 'https://www.lens.org'). 
 Imports:
+  dplyr,
   expss,
   httr,
   jsonlite,
+  tibble,
   utils
 Suggests:
   knitr,

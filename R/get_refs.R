@@ -30,6 +30,8 @@
 #' @importFrom httr content
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils write.table
+#' @importFrom tibble tibble
+#' @importFrom dplyr mutate
 #' @export
 #' @examples
 #' \dontrun{
@@ -37,7 +39,8 @@
 #'                   "10.1111/sum.12030", 
 #'                   "10.5194/bg-13-3619-2016", 
 #'                   "10.1016/j.agee.2012.09.006")
-#'   refs <- get_refs(article_list, get_records = 'both')
+#'   token <- 'token'
+#'   refs <- get_refs(article_list, get_records = 'both', token = token)
 #'   refs
 #'   }
 get_refs <- function(article_list,
@@ -64,61 +67,96 @@ get_refs <- function(article_list,
   
   # convert json output from article search to list
   record_list <- jsonlite::fromJSON(record_json) 
-  record_listdb <- as.data.frame(jsonlite::fromJSON(record_json))
   input_number <- record_list[["total"]]
+  
+  # list lens IDs
+  articles_id <- record_list[["data"]][["lens_id"]]
   
   if (get_records == 'citations') {
     
     # citations per article
     citation_count <- record_list[["data"]][["scholarly_citations_count"]]
     all_citations <- sum(citation_count, na.rm = TRUE)
+    cit_by_art <- record_list[["data"]][["scholarly_citations"]]
     citations <- unlist(record_list[["data"]][["scholarly_citations"]])
     citations_unique <- unique(citations)
     
+    cit_counts_df <- tibble(articles_id,
+           citation_count,
+           cit_by_art)
+    cit_counts_df[is.na(cit_counts_df)] <- 0
+    cit_counts_df <- mutate(cit_counts_df,
+        # cumulatively add up citation count
+        cumulative_n = cumsum(citation_count),
+        # divide by max citations allowed
+        export_group = floor(cumsum(citation_count) / 1000)
+      )
+    
+    
+    # get a list of vectors of the ids
+    citgroups <-group_split(cit_counts_df, export_group) 
+    
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
                                 paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
-                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.')
+                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.\n\n')
     
-    # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
-    request2_cit <- paste0('{
+    # define query function
+    run_request <- function(input){
+      
+      # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
+      request <- paste0('{
 	"query": {
 		"terms": {
-			"lens_id": [', paste0('"', paste(citations_unique, collapse = '", "'), '"'), ']
+			"lens_id": [', paste0('"', paste(input, collapse = '", "'), '"'), ']
 		}
 	},
 	"size":1000
 }')
+      #perform references search and extract text results
+      results <- getLENSData(token, request)
+      return(results)
+    }
     
-    #perform references search and extract text results
-    data2_cit <- getLENSData(token, request2_cit)
-    record_json2_cit <- httr::content(data2_cit, "text")
+    # run the query function for each tibble, adding to a final dataset
+    cit_results <- data.frame()
+    tStart_cit <- Sys.time()
+    for (i in 1:length(citgroups)){
+      data_cit <- run_request(unlist(citgroups[[i]]$cit_by_art))
+      record_json_cit <- httr::content(data_cit, "text")
+      record_list_cit <- jsonlite::fromJSON(record_json_cit)
+      record_list_cit_df <- as.data.frame(record_list_cit)
+      cit_results <- bind_rows(cit_results, record_list_cit_df)
+      tEnd_cit <- Sys.time()
+      if (data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
+        t_cit <- tEnd_cit - tStart_cit
+        Sys.sleep(60 - t) # pause to limit requests below 10/min 
+      }
+    }
+    all_results_cit <- cit_results$data.lens_id
     
-    #convert json output from references search to list and build download report
-    record_list2_cit <- jsonlite::fromJSON(record_json2_cit) 
-    download_report_cit <- paste0('Your query returned ', record_list2_cit[["total"]], ' records from lens.org.\n\n')
+    download_report_cit <- paste0('Your query returned ', nrow(cit_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
-    
     type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
                             description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
                             publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
-    publication_type_cit <- record_list2_cit[["data"]][["publication_type"]]
+    publication_type_cit <- cit_results$data.publication_type
     authors_cit <- list()
-    for (i in 1:length(record_list2_cit[["data"]][["authors"]])) {
-      authors_cit <- unlist(c(authors_cit, paste0(record_list2_cit[["data"]][["authors"]][[i]]$last_name, ', ', 
-                                                  record_list2_cit[["data"]][["authors"]][[i]]$first_name, collapse = '; ')))
+    for (i in 1:length(cit_results$data.authors)) {
+      authors_cit <- unlist(c(authors_cit, paste0(cit_results$data.authors[[i]]$last_name, ', ', 
+                                                  cit_results$data.authors[[i]]$first_name, collapse = '; ')))
     }
-    title_cit <- record_list2_cit[["data"]][["title"]]
-    year_cit <- record_list2_cit[["data"]][["year_published"]]
-    abstract_cit <- record_list2_cit[["data"]][["abstract"]]
-    start_page_cit <- record_list2_cit[["data"]][["start_page"]]
-    end_page_cit <- record_list2_cit[["data"]][["end_page"]]
-    source_title_cit <- record_list2_cit[["data"]][["source"]][["title"]]
-    volume_cit <- record_list2_cit[["data"]][["volume"]]
-    issue_cit <- record_list2_cit[["data"]][["issue"]]
-    publisher_cit <- record_list2_cit[["data"]][["source"]][["publisher"]]
-    issn_cit <- record_list2_cit[["data"]][["source"]][["issn"]]
-    doi_cit <- unlist(lapply(record_list2_cit[["data"]][["external_ids"]], function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+    title_cit <- cit_results$data.title
+    year_cit <- cit_results$data.year_published
+    abstract_cit <- cit_results$data.abstract
+    start_page_cit <- cit_results$data.start_page
+    end_page_cit <- cit_results$data.end_page
+    source_title_cit <- cit_results$data.source.title
+    volume_cit <- cit_results$data.volume
+    issue_cit <- cit_results$data.issue
+    publisher_cit <- cit_results$data.source.publisher
+    issn_cit <- cit_results$data.source.issn
+    doi_cit <- unlist(lapply(cit_results$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     level1_ris_cit <- paste(paste0('\n',
                                    'TY  - ', expss::vlookup(publication_type_cit, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
@@ -144,63 +182,98 @@ get_refs <- function(article_list,
     citations_ris <- level1_ris_cit
     
     write.table(citations_ris, file = "citations.ris", sep = "")
-    cat(paste0('#Summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit))
+    cat(paste0('#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit))
     if (save_object == TRUE) {
       return(citations_ris)
     }
+    
+    
   } else if (get_records == 'references') {
     
     # obtain reference lists from article search
+    reference_count <- record_list[["data"]][["references_count"]]
+    all_references <- sum(reference_count, na.rm = TRUE)
+    ref_by_art <- record_list[["data"]][["references"]]
     references <- unlist(record_list[["data"]][["references"]])
-    all_refs <- length(references)
+    references_unique <- unique(references)
+    deduped_references <- length(references_unique)
     
-    # deduplicate shared references and build deduplication report
-    references <- unique(references)
-    deduped_citations <- length(references)
-    duplicates <- all_refs - deduped_citations
-    stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_refs, ' references. The input articles contained the following identifiable references on lens.org: \n',
+    ref_counts_df <- tibble(articles_id,
+                            reference_count,
+                            ref_by_art)
+    ref_counts_df[is.na(ref_counts_df)] <- 0
+    ref_counts_df <- mutate(ref_counts_df,
+                            # cumulatively add up citation count
+                            cumulative_n = cumsum(reference_count),
+                            # divide by max citations allowed
+                            export_group = floor(cumsum(reference_count) / 1000)
+    )
+    
+    
+    # get a list of vectors of the ids
+    refgroups <-group_split(ref_counts_df, export_group) 
+    
+    stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. The input articles contained the following identifiable references on lens.org: \n',
                                 paste(paste0('doi: ', article_list, ', references: ', record_list[["data"]][["references_count"]]), collapse = '\n'),
-                                '\n\nThis corresponds to ', deduped_citations, ' unique records.\n\n')
+                                '\n\nThis corresponds to ', deduped_references, ' unique records.\n\n')
     
-    # build query for article references - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
-    request2_ref <- paste0('{
+    # define query function
+    run_request <- function(input){
+      
+      # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
+      request <- paste0('{
 	"query": {
 		"terms": {
-			"lens_id": [', paste0('"', paste(references, collapse = '", "'), '"'), ']
+			"lens_id": [', paste0('"', paste(input, collapse = '", "'), '"'), ']
 		}
 	},
 	"size":1000
 }')
+      #perform references search and extract text results
+      results <- getLENSData(token, request)
+      return(results)
+    }
     
-    #perform references search and extract text results
-    data2_ref <- getLENSData(token, request2_ref)
-    record_json2_ref <- httr::content(data2_ref, "text")
-    
-    #convert json output from references search to list and build download report
-    record_list2_ref <- jsonlite::fromJSON(record_json2_ref) 
-    download_report_ref <- paste0('Your query returned ', record_list2_ref[["total"]], ' records from lens.org.\n\n')
+      # run the query function for each tibble, adding to a final dataset
+      ref_results <- data.frame()
+      tStart_ref <- Sys.time()
+      for (i in 1:length(refgroups)){
+        data_ref <- run_request(unlist(refgroups[[i]]$ref_by_art))
+        record_json_ref <- httr::content(data_ref, "text")
+        record_list_ref <- jsonlite::fromJSON(record_json_ref)
+        record_list_ref_df <- as.data.frame(record_list_ref)
+        ref_results <- bind_rows(ref_results, record_list_ref_df)
+        tEnd_ref <- Sys.time()
+        if (data_ref[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
+          t_ref <- tEnd_ref - tStart_ref
+          Sys.sleep(60 - t) # pause to limit requests below 10/min 
+        }
+      }
+      all_results_ref <- ref_results$data.lens_id
+      
+    download_report_ref <- paste0('Your query returned ', nrow(ref_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
     type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
                             description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
                             publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
-    publication_type_ref <- record_list2_ref[["data"]][["publication_type"]]
+    publication_type_ref <- ref_results$data.publication_type
     authors_ref <- list()
-    for (i in 1:length(record_list2_ref[["data"]][["authors"]])) {
-      authors_ref <- unlist(c(authors_ref, paste0(record_list2_ref[["data"]][["authors"]][[i]]$last_name, ', ', 
-                                                  record_list2_ref[["data"]][["authors"]][[i]]$first_name, collapse = '; ')))
+    for (i in 1:length(ref_results$data.authors)) {
+      authors_ref <- unlist(c(authors_ref, paste0(ref_results$data.authors[[i]]$last_name, ', ', 
+                                                  ref_results$data.authors[[i]]$first_name, collapse = '; ')))
     }
-    title_ref <- record_list2_ref[["data"]][["title"]]
-    year_ref <- record_list2_ref[["data"]][["year_published"]]
-    abstract_ref <- record_list2_ref[["data"]][["abstract"]]
-    start_page_ref <- record_list2_ref[["data"]][["start_page"]]
-    end_page_ref <- record_list2_ref[["data"]][["end_page"]]
-    source_title_ref <- record_list2_ref[["data"]][["source"]][["title"]]
-    volume_ref <- record_list2_ref[["data"]][["volume"]]
-    issue_ref <- record_list2_ref[["data"]][["issue"]]
-    publisher_ref <- record_list2_ref[["data"]][["source"]][["publisher"]]
-    issn_ref <- record_list2_ref[["data"]][["source"]][["issn"]]
-    doi_ref <- unlist(lapply(record_list2_ref[["data"]][["external_ids"]], function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+    title_ref <- ref_results$data.title
+    year_ref <- ref_results$data.year_published
+    abstract_ref <- ref_results$data.abstract
+    start_page_ref <- ref_results$data.start_page
+    end_page_ref <- ref_results$data.end_page
+    source_title_ref <- ref_results$data.source.title
+    volume_ref <- ref_results$data.volume
+    issue_ref <- ref_results$data.issue
+    publisher_ref <- ref_results$data.source.publisher
+    issn_ref <- ref_results$data.source.issn
+    doi_ref <- unlist(lapply(ref_results$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     level1_ris_ref <- paste(paste0('\n',
                                    'TY  - ', expss::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
@@ -226,64 +299,96 @@ get_refs <- function(article_list,
     references_ris <- level1_ris_ref
     
     write.table(references_ris, file = "references.ris", sep = "")
-    cat(paste0('#Summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref))
+    cat(paste0('#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref))
     if (save_object == TRUE) {
       return(references_ris)
     }
   } else if (get_records == 'both') {
     
     # obtain reference lists from article search
+    reference_count <- record_list[["data"]][["references_count"]]
+    all_references <- sum(reference_count, na.rm = TRUE)
+    ref_by_art <- record_list[["data"]][["references"]]
     references <- unlist(record_list[["data"]][["references"]])
-    all_refs <- length(references)
+    references_unique <- unique(references)
+    deduped_references <- length(references_unique)
     
-    # deduplicate shared references and build deduplication report
-    references <- unique(references)
-    input_number <- record_list[["total"]]
-    deduped_citations <- length(references)
-    duplicates <- all_refs - deduped_citations
-    stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_refs, ' references. The input articles contained the following identifiable references on lens.org: \n',
+    ref_counts_df <- tibble(articles_id,
+                            reference_count,
+                            ref_by_art)
+    ref_counts_df[is.na(ref_counts_df)] <- 0
+    ref_counts_df <- mutate(ref_counts_df,
+                            # cumulatively add up citation count
+                            cumulative_n = cumsum(reference_count),
+                            # divide by max citations allowed
+                            export_group = floor(cumsum(reference_count) / 1000)
+    )
+    
+    
+    # get a list of vectors of the ids
+    refgroups <-group_split(ref_counts_df, export_group) 
+    
+    stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. The input articles contained the following identifiable references on lens.org: \n',
                                 paste(paste0('doi: ', article_list, ', references: ', record_list[["data"]][["references_count"]]), collapse = '\n'),
-                                '\n\nThis corresponds to ', deduped_citations, ' unique records.\n\n')
+                                '\n\nThis corresponds to ', deduped_references, ' unique records.\n\n')
     
-    # build query for article references - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
-    request2_ref <- paste0('{
+    # define query function
+    run_request <- function(input){
+      
+      # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
+      request <- paste0('{
 	"query": {
 		"terms": {
-			"lens_id": [', paste0('"', paste(references, collapse = '", "'), '"'), ']
+			"lens_id": [', paste0('"', paste(input, collapse = '", "'), '"'), ']
 		}
 	},
 	"size":1000
 }')
+      #perform references search and extract text results
+      results <- getLENSData(token, request)
+      return(results)
+    }
     
-    #perform references search and extract text results
-    data2_ref <- getLENSData(token, request2_ref)
-    record_json2_ref <- httr::content(data2_ref, "text")
+    # run the query function for each tibble, adding to a final dataset
+    ref_results <- data.frame()
+    tStart_ref <- Sys.time()
+    for (i in 1:length(refgroups)){
+      data_ref <- run_request(unlist(refgroups[[i]]$ref_by_art))
+      record_json_ref <- httr::content(data_ref, "text")
+      record_list_ref <- jsonlite::fromJSON(record_json_ref)
+      record_list_ref_df <- as.data.frame(record_list_ref)
+      ref_results <- bind_rows(ref_results, record_list_ref_df)
+      tEnd_ref <- Sys.time()
+      if (data_ref[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
+        t_ref <- tEnd_ref - tStart_ref
+        Sys.sleep(60 - t) # pause to limit requests below 10/min 
+      }
+    }
+    all_results_ref <- ref_results$data.lens_id
     
-    #convert json output from references search to list and build download report
-    record_list2_ref <- jsonlite::fromJSON(record_json2_ref) 
-    download_report_ref <- paste0('Your query returned ', record_list2_ref[["total"]], ' records from lens.org.\n\n')
+    download_report_ref <- paste0('Your query returned ', nrow(ref_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
     type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
                             description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
                             publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
-    publication_type_ref <- record_list2_ref[["data"]][["publication_type"]]
+    publication_type_ref <- ref_results$data.publication_type
     authors_ref <- list()
-    for (i in 1:length(record_list2_ref[["data"]][["authors"]])) {
-      authors_ref <- unlist(c(authors_ref, paste0(record_list2_ref[["data"]][["authors"]][[i]]$last_name, ', ', 
-                                                  record_list2_ref[["data"]][["authors"]][[i]]$first_name, collapse = '; ')))
+    for (i in 1:length(ref_results$data.authors)) {
+      authors_ref <- unlist(c(authors_ref, paste0(ref_results$data.authors[[i]]$last_name, ', ', 
+                                                  ref_results$data.authors[[i]]$first_name, collapse = '; ')))
     }
-    title_ref <- record_list2_ref[["data"]][["title"]]
-    year_ref <- record_list2_ref[["data"]][["year_published"]]
-    abstract_ref <- record_list2_ref[["data"]][["abstract"]]
-    start_page_ref <- record_list2_ref[["data"]][["start_page"]]
-    end_page_ref <- record_list2_ref[["data"]][["end_page"]]
-    source_title_ref <- record_list2_ref[["data"]][["source"]][["title"]]
-    volume_ref <- record_list2_ref[["data"]][["volume"]]
-    issue_ref <- record_list2_ref[["data"]][["issue"]]
-    publisher_ref <- record_list2_ref[["data"]][["source"]][["publisher"]]
-    issn_ref <- record_list2_ref[["data"]][["source"]][["issn"]]
-    doi_ref <- unlist(lapply(record_list2_ref[["data"]][["external_ids"]], function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+    title_ref <- ref_results$data.title
+    year_ref <- ref_results$data.year_published
+    abstract_ref <- ref_results$data.abstract
+    start_page_ref <- ref_results$data.start_page
+    end_page_ref <- ref_results$data.end_page
+    source_title_ref <- ref_results$data.source.title
+    volume_ref <- ref_results$data.volume
+    issue_ref <- ref_results$data.issue
+    publisher_ref <- ref_results$data.source.publisher
+    issn_ref <- ref_results$data.source.issn
+    doi_ref <- unlist(lapply(ref_results$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     level1_ris_ref <- paste(paste0('\n',
                                    'TY  - ', expss::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
@@ -309,58 +414,92 @@ get_refs <- function(article_list,
     references_ris <- level1_ris_ref
     
     write.table(references_ris, file = "references.ris", sep = "")
-    cat(paste0('#Summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref))
+    cat(paste0('#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref))
     
     
     # citations per article
     citation_count <- record_list[["data"]][["scholarly_citations_count"]]
     all_citations <- sum(citation_count, na.rm = TRUE)
+    cit_by_art <- record_list[["data"]][["scholarly_citations"]]
     citations <- unlist(record_list[["data"]][["scholarly_citations"]])
     citations_unique <- unique(citations)
     
+    cit_counts_df <- tibble(articles_id,
+                            citation_count,
+                            cit_by_art)
+    cit_counts_df[is.na(cit_counts_df)] <- 0
+    cit_counts_df <- mutate(cit_counts_df,
+                            # cumulatively add up citation count
+                            cumulative_n = cumsum(citation_count),
+                            # divide by max citations allowed
+                            export_group = floor(cumsum(citation_count) / 1000)
+    )
+    
+    
+    # get a list of vectors of the ids
+    citgroups <-group_split(cit_counts_df, export_group) 
+    
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
                                 paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
-                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.')
+                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.\n\n')
     
-    # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
-    request2_cit <- paste0('{
+    # define query function
+    run_request <- function(input){
+      
+      # build query for article citations - this will pull back a maximum of 1,000 hits from lens.org, so not great if lots of refs
+      request <- paste0('{
 	"query": {
 		"terms": {
-			"lens_id": [', paste0('"', paste(citations_unique, collapse = '", "'), '"'), ']
+			"lens_id": [', paste0('"', paste(input, collapse = '", "'), '"'), ']
 		}
 	},
 	"size":1000
 }')
+      #perform references search and extract text results
+      results <- getLENSData(token, request)
+      return(results)
+    }
     
-    #perform references search and extract text results
-    data2_cit <- getLENSData(token, request2_cit)
-    record_json2_cit <- httr::content(data2_cit, "text")
+    # run the query function for each tibble, adding to a final dataset
+    cit_results <- data.frame()
+    tStart_cit <- Sys.time()
+    for (i in 1:length(citgroups)){
+      data_cit <- run_request(unlist(citgroups[[i]]$cit_by_art))
+      record_json_cit <- httr::content(data_cit, "text")
+      record_list_cit <- jsonlite::fromJSON(record_json_cit)
+      record_list_cit_df <- as.data.frame(record_list_cit)
+      cit_results <- bind_rows(cit_results, record_list_cit_df)
+      tEnd_cit <- Sys.time()
+      if (data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
+        t_cit <- tEnd_cit - tStart_cit
+        Sys.sleep(60 - t) # pause to limit requests below 10/min 
+      }
+    }
+    all_results_cit <- cit_results$data.lens_id
     
-    #convert json output from references search to list and build download report
-    record_list2_cit <- jsonlite::fromJSON(record_json2_cit) 
-    download_report_cit <- paste0('Your query returned ', record_list2_cit[["total"]], ' records from lens.org.\n\n')
+    download_report_cit <- paste0('Your query returned ', nrow(cit_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
     type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
                             description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
                             publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
-    publication_type_cit <- record_list2_cit[["data"]][["publication_type"]]
+    publication_type_cit <- cit_results$data.publication_type
     authors_cit <- list()
-    for (i in 1:length(record_list2_cit[["data"]][["authors"]])) {
-      authors_cit <- unlist(c(authors_cit, paste0(record_list2_cit[["data"]][["authors"]][[i]]$last_name, ', ', 
-                                                  record_list2_cit[["data"]][["authors"]][[i]]$first_name, collapse = '; ')))
+    for (i in 1:length(cit_results$data.authors)) {
+      authors_cit <- unlist(c(authors_cit, paste0(cit_results$data.authors[[i]]$last_name, ', ', 
+                                                  cit_results$data.authors[[i]]$first_name, collapse = '; ')))
     }
-    title_cit <- record_list2_cit[["data"]][["title"]]
-    year_cit <- record_list2_cit[["data"]][["year_published"]]
-    abstract_cit <- record_list2_cit[["data"]][["abstract"]]
-    start_page_cit <- record_list2_cit[["data"]][["start_page"]]
-    end_page_cit <- record_list2_cit[["data"]][["end_page"]]
-    source_title_cit <- record_list2_cit[["data"]][["source"]][["title"]]
-    volume_cit <- record_list2_cit[["data"]][["volume"]]
-    issue_cit <- record_list2_cit[["data"]][["issue"]]
-    publisher_cit <- record_list2_cit[["data"]][["source"]][["publisher"]]
-    issn_cit <- record_list2_cit[["data"]][["source"]][["issn"]]
-    doi_cit <- unlist(lapply(record_list2_cit[["data"]][["external_ids"]], function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+    title_cit <- cit_results$data.title
+    year_cit <- cit_results$data.year_published
+    abstract_cit <- cit_results$data.abstract
+    start_page_cit <- cit_results$data.start_page
+    end_page_cit <- cit_results$data.end_page
+    source_title_cit <- cit_results$data.source.title
+    volume_cit <- cit_results$data.volume
+    issue_cit <- cit_results$data.issue
+    publisher_cit <- cit_results$data.source.publisher
+    issn_cit <- cit_results$data.source.issn
+    doi_cit <- unlist(lapply(cit_results$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     level1_ris_cit <- paste(paste0('\n',
                                    'TY  - ', expss::vlookup(publication_type_cit, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
@@ -386,7 +525,8 @@ get_refs <- function(article_list,
     citations_ris <- level1_ris_cit
     
     write.table(citations_ris, file = "citations.ris", sep = "")
-    cat(paste0('#Summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit))
+    cat(paste0('\n**********\n#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit))
+    
     if (save_object == TRUE) {
       return(list(citations = citations_ris, references = references_ris))
     }
@@ -409,5 +549,5 @@ get_refs <- function(article_list,
 getLENSData <- function(token, query){
   url <- 'https://api.lens.org/scholarly/search'
   headers <- c('Authorization' = token, 'Content-Type' = 'application/json')
-  POST(url = url, add_headers(.headers=headers), body = query)
+  httr::POST(url = url, httr::add_headers(.headers=headers), body = query)
 }
