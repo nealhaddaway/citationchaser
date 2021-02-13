@@ -5,6 +5,6 @@ account: estech
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3624008
-bundleId: 4215539
+bundleId: 4218028
 url: https://estech.shinyapps.io/citationchaser/
-when: 1613149391.39022
+when: 1613210906.61461
