@@ -130,6 +130,7 @@ get_refs <- function(article_list,
            citation_count,
            cit_by_art)
     cit_counts_df[is.na(cit_counts_df)] <- 0
+    export_group <- NULL
     cit_counts_df <- mutate(cit_counts_df,
         # cumulatively add up citation count
         cumulative_n = cumsum(citation_count),
