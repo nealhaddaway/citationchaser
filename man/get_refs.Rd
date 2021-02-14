@@ -29,9 +29,10 @@ applying for scholarly API access and creating a token once approved. See
 'https://www.lens.org/lens/user/subscriptions#scholar' for further details.}
 }
 \value{
-An RIS file is saved to the working directory. A report is printed
-to the console. If 'save_object=TRUE', the RIS file is returned as an
-object
+A report is printed to the console and the report, RIS files for the
+input articles, references and citations (depending on 'get_records'), and
+dataframes of the input articles, references and citations are returned. If
+'save_ris=TRUE', the RIS file(s) returned are saved to the working directory.
 }
 \description{
 This function takes a list of articles in the form of established
