@@ -18,8 +18,8 @@
 #' @param get_records Specification of whether to look for records referenced 
 #'   within the input articles ('references'), records citing the input articles 
 #'   ('citations'), or both ('both'). 
-#' @param save_object Option to save the resultant ris file as an object in 
-#'   the Global Environment. The default is FALSE.
+#' @param save_ris Option to save the resultant ris file locally in the working 
+#' directory. The default is FALSE.
 #' @param token An access key for the lens.org API. Tokens can be obtained by 
 #'   applying for scholarly API access and creating a token once approved. See 
 #'   'https://www.lens.org/lens/user/subscriptions#scholar' for further details.
@@ -40,13 +40,13 @@
 #'                   "10.5194/bg-13-3619-2016", 
 #'                   "10.1016/j.agee.2012.09.006")
 #'   token <- 'token'
-#'   refs <- get_refs(article_list, get_records = 'both', token = token)
-#'   refs
+#'   refs <- get_refs(article_list, save_objects = TRUE, get_records = 'both', token = token)
+#'   refs$references_df
 #'   }
 get_refs <- function(article_list,
                      type = 'doi',
                      get_records,
-                     save_object = FALSE,
+                     save_ris = FALSE,
                      token) {
   
   # process doi formats of input article list
@@ -67,6 +67,50 @@ get_refs <- function(article_list,
   
   # convert json output from article search to list
   record_list <- jsonlite::fromJSON(record_json) 
+  
+  # convert list to dataframe
+  inputs_df <- as.data.frame(record_list)
+  
+  # convert inputs to RIS
+  type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
+                          description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
+                          publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
+  publication_type <- inputs_df$data.publication_type
+  authors <- list()
+  for (i in 1:length(inputs_df$data.authors)) {
+    authors <- unlist(c(authors, paste0(inputs_df$data.authors[[i]]$last_name, ', ', 
+                                        inputs_df$data.authors[[i]]$first_name, collapse = '; ')))
+  }
+  title <- inputs_df$data.title
+  year <- inputs_df$data.year_published
+  abstract <- inputs_df$data.abstract
+  start_page <- inputs_df$data.start_page
+  end_page <- inputs_df$data.end_page
+  source_title <- inputs_df$data.source.title
+  volume <- inputs_df$data.volume
+  issue <- inputs_df$data.issue
+  publisher <- inputs_df$data.source.publisher
+  issn <- inputs_df$data.source.issn
+  doi <- unlist(lapply(inputs_df$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+  
+  inputs_ris <- paste(paste0('\n',
+                             'TY  - ', expss::vlookup(publication_type, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
+                             'AU  - ', authors, '\n',
+                             'TI  - ', title, '\n',
+                             'PY  - ', year, '\n',
+                             'AB  - ', abstract, '\n',
+                             'SP  - ', start_page, '\n',
+                             'EP  - ', end_page, '\n',
+                             'JF  - ', source_title, '\n',
+                             'VL  - ', volume, '\n',
+                             'IS  - ', issue, '\n',
+                             'PB  - ', publisher, '\n',
+                             # 'SN  - ', issn, '\n',
+                             'DO  - ', doi, '\n',
+                             'ER  - '),
+                      collapse = '\n')
+  
+  # count input records
   input_number <- record_list[["total"]]
   
   # list lens IDs
@@ -132,14 +176,12 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
+    citations_df <- cit_results
     all_results_cit <- cit_results$data.lens_id
     
     download_report_cit <- paste0('Your query returned ', nrow(cit_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
-                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
-                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_cit <- cit_results$data.publication_type
     authors_cit <- list()
     for (i in 1:length(cit_results$data.authors)) {
@@ -181,10 +223,13 @@ get_refs <- function(article_list,
     
     citations_ris <- level1_ris_cit
     
-    write.table(citations_ris, file = "citations.ris", sep = "")
-    cat(paste0('#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit))
-    if (save_object == TRUE) {
-      return(citations_ris)
+    report_cit <- paste0('Query date/time:\n', tStart_cit, '\n\n#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit)
+    cat(report_cit)
+    
+    return(list(report = report_cit, citations_ris = citations_ris, citations_df = citations_df, inputs_ris = inputs_ris, inputs_df = inputs_df))
+    
+    if (save_ris == TRUE) {
+      write.table(citations_ris, file = "citations.ris", sep = "")
     }
     
     
@@ -249,14 +294,12 @@ get_refs <- function(article_list,
           Sys.sleep(60 - t) # pause to limit requests below 10/min 
         }
       }
+      references_df <- ref_results
       all_results_ref <- ref_results$data.lens_id
       
     download_report_ref <- paste0('Your query returned ', nrow(ref_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
-                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
-                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_ref <- ref_results$data.publication_type
     authors_ref <- list()
     for (i in 1:length(ref_results$data.authors)) {
@@ -298,10 +341,13 @@ get_refs <- function(article_list,
     
     references_ris <- level1_ris_ref
     
-    write.table(references_ris, file = "references.ris", sep = "")
-    cat(paste0('#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref))
-    if (save_object == TRUE) {
-      return(references_ris)
+    report_ref <- paste0('Query date/time:\n', tStart_ref, '\n\n#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref)
+    cat(report_ref)
+    
+    return(list(report = report_ref, references_ris = references_ris, references_df = references_df, inputs_ris = inputs_ris, inputs_df = inputs_df))
+    
+    if (save_ris == TRUE) {
+      write.table(references_ris, file = "references.ris", sep = "")
     }
   } else if (get_records == 'both') {
     
@@ -364,14 +410,12 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
+    references_df <- ref_results
     all_results_ref <- ref_results$data.lens_id
     
     download_report_ref <- paste0('Your query returned ', nrow(ref_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
-                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
-                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_ref <- ref_results$data.publication_type
     authors_ref <- list()
     for (i in 1:length(ref_results$data.authors)) {
@@ -413,8 +457,8 @@ get_refs <- function(article_list,
     
     references_ris <- level1_ris_ref
     
-    write.table(references_ris, file = "references.ris", sep = "")
-    cat(paste0('#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref))
+    report_ref <- paste0('Query date/time:\n', tStart_ref, '\n\n#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref)
+    cat(report_ref)
     
     
     # citations per article
@@ -475,14 +519,12 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
+    citations_df <- cit_results
     all_results_cit <- cit_results$data.lens_id
     
     download_report_cit <- paste0('Your query returned ', nrow(cit_results), ' records from lens.org.\n\n')
     
     # convert json to ris style
-    type_list <- data.frame(type = c("ABST", "BOOK", "CHAP", "COMP", "CONF", "DATA", "JOUR"), 
-                            description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"), 
-                            publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_cit <- cit_results$data.publication_type
     authors_cit <- list()
     for (i in 1:length(cit_results$data.authors)) {
@@ -524,11 +566,14 @@ get_refs <- function(article_list,
     
     citations_ris <- level1_ris_cit
     
-    write.table(citations_ris, file = "citations.ris", sep = "")
-    cat(paste0('\n**********\n#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit))
+    report_cit <- paste0('\n**********\n\n', 'Query date/time:\n', tStart_cit, '\n\n#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit)
+    cat(report_cit)
     
-    if (save_object == TRUE) {
-      return(list(citations = citations_ris, references = references_ris))
+    return(list(report = c(report_ref, report_cit), citations_ris = citations_ris, citations_df = citations_df, references_ris = references_ris, references_df = references_df, inputs_ris = inputs_ris, inputs_df = inputs_df))
+    
+    if (save_ris == TRUE) {
+      write.table(citations_ris, file = "citations.ris", sep = "")
+      write.table(references_ris, file = "references.ris", sep = "")
     }
   } 
 }
