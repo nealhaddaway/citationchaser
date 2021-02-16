@@ -294,21 +294,23 @@ server <- function(input, output) {
     })
     #network viz
     output$force <- renderForceNetwork({
-        tmp1<-data.frame("IDs"=network$input_lensID, "Group"= network$type)
-        tmp2<-data.frame("IDs"=network$reference_lensID, "Group"= network$type)
-        tmp=rbind(tmp1,tmp2)
-        Nodes=unique(tmp)
-        
-        
-        # make a links data frame using the indexes (0-based) of nodes in 'nodes'
-        links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
-                            target = match(network$reference_lensID,Nodes$IDs) - 1)
-        links<-links %>% 
-            drop_na()
-        
-        n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
-                            Target = "target", NodeID ="IDs", Group="Group", 
-                            opacity = 1, opacityNoHover = 1, zoom=TRUE, legend=TRUE,colourScale = JS('d3.scaleOrdinal().range(["#a50026","#4575b4"]);'))
+        network=rv$network
+        print(network)
+         tmp1<-data.frame("IDs"=network$input_lensID, "Group"= network$type)
+         tmp2<-data.frame("IDs"=network$reference_lensID, "Group"= network$type)
+         tmp=rbind(tmp1,tmp2)
+         Nodes=unique(tmp)
+         
+         
+         # make a links data frame using the indexes (0-based) of nodes in 'nodes'
+         links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
+                             target = match(network$reference_lensID,Nodes$IDs) - 1)
+         links<-links %>% 
+             drop_na()
+         
+         n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
+                             Target = "target", NodeID ="IDs", Group="Group", 
+                             opacity = 1, opacityNoHover = 1, zoom=TRUE, legend=TRUE,colourScale = JS('d3.scaleOrdinal().range(["#a50026","#4575b4"]);'))
             })
 }
 
