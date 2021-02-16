@@ -60,7 +60,7 @@ get_refs <- function(article_list,
   } 
   
   # build query for article search
-  request1 <- paste0('{\n\t"query": {\n\t\t"terms": {\n\t\t\t"doi": ["', paste0('', paste(article_list, collapse = '", "'), '"'),']\n\t\t}\n\t},\n\t"size":1000\n}')
+  request1 <- paste0('{\n\t"query": {\n\t\t"terms": {\n\t\t\t"',type,'": ["', paste0('', paste(article_list, collapse = '", "'), '"'),']\n\t\t}\n\t},\n\t"size":1000\n}')
   
   # perform article search and extract text results
   data <- getLENSData(token, request1)
