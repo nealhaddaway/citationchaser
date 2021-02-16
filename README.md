@@ -11,11 +11,11 @@ USERS MUST OBTAIN A TOKEN FOR THE LENS.ORG SCHOLARLY API (<a href="https://www.l
 A shiny app version of the package is available [here](https://estech.shinyapps.io/citationchaser/).
 
 Please cite as:<br>
-Neal R Haddaway. 2021. citationchaser: an R package for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4533747" target="_blank">10.5281/zenodo.4533747</a><br>
+Haddaway, N. R., Grainger, M. J., Gray, C. T. 2021. citationchaser: An R package and Shiny app for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4543513" target="_blank">10.5281/zenodo.4543513</a><br>
 <a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/citationchaser/master/inst/extdata/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
 
 <!-- badges: start -->
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4533747.svg)](https://doi.org/10.5281/zenodo.4533747)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4543513.svg)](https://doi.org/10.5281/zenodo.4543513)
 
 ![GitHub all releases](https://img.shields.io/github/downloads/nealhaddaway/citationchaser/total)
 ![GitHub Release Date](https://img.shields.io/github/release-date/nealhaddaway/citationchaser)

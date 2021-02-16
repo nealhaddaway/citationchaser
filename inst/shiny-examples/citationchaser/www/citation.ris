@@ -2,12 +2,12 @@ TY  - COMP
 AU  - Haddaway, N. R.
 AU  - Grainger, M. J.
 AU  - Gray, C. T.
-DO  - 10.5281/zenodo.4533747
-ET  - 0.0.1
+DO  - 10.5281/zenodo.4543513
+ET  - 0.0.3
 PY  - 2021
 ST  - citationchaser: an R package for forward and backward citations chasing in academic searching
 TI  - citationchaser: an R package for forward and backward citations chasing in academic searching
 UR  - https://github.com/nealhaddaway/citationchaser
-ID  - 5946
+ID  - 
 ER  - 
 
