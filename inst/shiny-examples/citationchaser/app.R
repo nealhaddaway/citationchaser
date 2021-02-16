@@ -156,10 +156,11 @@ ui <- navbarPage("citationchaser",
                  column(12,
                         h3('Visualise the citation network'),
                         actionButton("get_network", "Visualise"), tags$img(height = 50, src = "legend.png"),
+                        'The network visualisation may take a few moments to generate. Zoom in and out using your mouse wheel or two fingers on a trackpad. Move around the network by clicking and dragging.',
                         br(),
                         conditionalPanel(
                             condition='input.get_network!=null && input.get_network!=""',
-                            forceNetworkOutput("force"))
+                            forceNetworkOutput("force", height = '1200px'))
                  )
              )
     )
