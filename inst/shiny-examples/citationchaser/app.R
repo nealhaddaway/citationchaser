@@ -160,7 +160,7 @@ ui <- navbarPage("citationchaser",
                         br(),
                         conditionalPanel(
                             condition='input.get_network!=null && input.get_network!=""',
-                            forceNetworkOutput("force", height = '1200px'))
+                            forceNetworkOutput("force", height = '1100px'))
                  )
              )
     )
