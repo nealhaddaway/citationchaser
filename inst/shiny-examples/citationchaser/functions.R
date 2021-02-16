@@ -185,7 +185,7 @@ get_refs <- function(article_list,
     
     report_cit <- stage1_report_cit
     
-    return(list(display = level1_table_cit, ris = level1_ris_cit, report = report_cit))
+    return(list(display = level1_table_cit, ris = level1_ris_cit, report = report_cit, df = cit_results))
     
   } else if (get_records == 'references') {
     
@@ -304,7 +304,7 @@ get_refs <- function(article_list,
     
     report_ref <- stage1_report_ref
     
-    return(list(display = level1_table_ref, ris = level1_ris_ref, report = report_ref))
+    return(list(display = level1_table_ref, ris = level1_ris_ref, report = report_ref, df = ref_results))
     
   } 
 }
@@ -371,6 +371,7 @@ get_citation <- function(article_list,
   
   # convert json output from article search to list
   record_list <- jsonlite::fromJSON(record_json) 
+  inputs_df <- as.data.frame(record_list)
   
   # citations and references
   citation_count <- record_list[["data"]][["scholarly_citations_count"]]
@@ -428,7 +429,7 @@ get_citation <- function(article_list,
                               'ER  - '),
                        collapse = '\n')
   
-  return(list(display = article_table, ris = article_ris))
+  return(list(display = article_table, ris = article_ris, df = inputs_df))
   
 }
 

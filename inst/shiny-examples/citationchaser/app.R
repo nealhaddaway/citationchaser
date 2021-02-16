@@ -195,6 +195,7 @@ server <- function(input, output) {
                                     token = input$token)
         rv$articles <- article_ref$display
         rv$articles_ris <- article_ref$ris
+        rv$articles_df <- article_ref$df
     })
     # render articles table
     output$article_ref <- renderDataTable({
@@ -219,6 +220,7 @@ server <- function(input, output) {
         rv$refs_display <- references$display
         rv$refs_report <- references$report
         rv$refs_ris <- references$ris
+        rv$refs_df <- references$df
     })
     # render references table
     output$references <- renderDataTable({
@@ -247,6 +249,7 @@ server <- function(input, output) {
         rv$cits_display <- citations$display
         rv$cits_report <- citations$report
         rv$cits_ris <- citations$ris
+        rv$cits_df <- citations$df
     })
     # render citations table
     output$citations <- renderDataTable({
