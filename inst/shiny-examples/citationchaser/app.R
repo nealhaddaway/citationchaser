@@ -155,9 +155,11 @@ ui <- navbarPage("citationchaser",
              fluidRow(
                  column(12,
                         h3('Visualise the citation network'),
-                        actionButton("get_network", "Visualise"),
+                        actionButton("get_network", "Visualise"), tags$img(height = 50, src = "legend.png"),
                         br(),
-                        forceNetworkOutput("force")
+                        conditionalPanel(
+                            condition='input.get_network!=null && input.get_network!=""',
+                            forceNetworkOutput("force"))
                  )
              )
     )
@@ -310,7 +312,7 @@ server <- function(input, output) {
          
          n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
                              Target = "target", NodeID ="IDs", Group="Group", 
-                             opacity = 1, opacityNoHover = 1, zoom=TRUE, legend=TRUE,colourScale = JS('d3.scaleOrdinal().range(["#a50026","#4575b4"]);'))
+                             opacity = 1, opacityNoHover = 1, zoom=TRUE, colourScale = JS('d3.scaleOrdinal().range(["#a50026","#4575b4"]);'))
             })
 }
 
