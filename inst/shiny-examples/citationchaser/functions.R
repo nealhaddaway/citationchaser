@@ -433,4 +433,3 @@ get_citation <- function(article_list,
   
 }
 
-

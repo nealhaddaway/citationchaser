@@ -10,6 +10,7 @@ library(dplyr)
 library(httr)
 library(expss)
 library(scales)
+library(tidyr)
 
 source('functions.R')
 
@@ -148,6 +149,16 @@ ui <- navbarPage("citationchaser",
                         dataTableOutput('citations')
                  )
              )
+    ),
+    tabPanel("Network",
+             fluidRow(
+                 column(12,
+                        h3('Visualise the citation network'),
+                        actionButton("get_network", "Visualise"),
+                        br(),
+                        xxx()
+                 )
+             )
     )
 )
 
@@ -269,6 +280,17 @@ server <- function(input, output) {
         }
     )
     
+    
+    # prepare lens_ids for network visualisation
+    observeEvent(input$get_network,{
+        input_refs <- unnest(rv$articles_df, data.references)
+        input_refs <- data.frame(input_lensID = input_refs$data.lens_id, reference_lensID = input_refs$lens_id, type = 'reference')
+
+        input_cits <- unnest(rv$articles_df, data.scholarly_citations)
+        input_cits <- data.frame(input_lensID = input_cits$data.lens_id, reference_lensID = input_cits$data.scholarly_citations, type = 'citation')
+        
+        rv$network <- rbind(input_refs, input_cits)
+    })
 }
 
 # Run the application 
