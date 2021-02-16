@@ -12,7 +12,7 @@ A shiny app version of the package is available [here](https://estech.shinyapps.
 
 Please cite as:<br>
 Haddaway, N. R., Grainger, M. J., Gray, C. T. 2021. citationchaser: An R package and Shiny app for forward and backward citations chasing in academic searching. doi: <a href="https://doi.org/10.5281/zenodo.4543513" target="_blank">10.5281/zenodo.4543513</a><br>
-<a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/citationchaser/master/inst/extdata/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
+<a id="raw-url" href="https://raw.githubusercontent.com/nealhaddaway/citationchaser/master/inst/shiny-examples/citationchaser/www/citation.ris">Citation in .ris format (right click 'Save Link As')</a>
 
 <!-- badges: start -->
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4543513.svg)](https://doi.org/10.5281/zenodo.4543513)
