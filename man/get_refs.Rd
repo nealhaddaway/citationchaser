@@ -50,7 +50,7 @@ article_list <- c("10.1007/978-3-642-37048-9_13",
                   "10.5194/bg-13-3619-2016", 
                   "10.1016/j.agee.2012.09.006")
   token <- 'token'
-  refs <- get_refs(article_list, save_objects = TRUE, get_records = 'both', token = token)
+  refs <- get_refs(article_list, save_ris = TRUE, get_records = 'both', token = token)
   refs$references_df
   }
 }
