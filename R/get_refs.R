@@ -55,7 +55,7 @@ get_refs <- function(article_list,
     if (any(grep('(http|doi)', article_list)) == TRUE) {
       stop('Please ensure dois (digital object identifiers) are provided alone and not as URLS (i.e. do not include "doi.org" or "http...")')
     }
-  } else if (type != ('pmid|pmcid|coreid|magid|lens_id|title')) {
+  } else if (all(type != c('pmid', 'pmcid', 'coreid', 'magid', 'lens_id', 'title')) == TRUE) {
     stop('Please provide articles in one of the following formats: "doi" (digital object identifier, in this format: "10.1186/s13750-018-0126-2"), "pmid" (PubMed ID), "pmcid" (PubMed Central ID), "magid" (Microsoft Academic ID), "coreid" (CORE identifier), lens_id" (The Lens.org ID), "title" (article title; much lower specificity)')
   } 
   
