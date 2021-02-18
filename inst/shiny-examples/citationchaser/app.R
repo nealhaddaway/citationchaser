@@ -294,27 +294,39 @@ server <- function(input, output) {
         input_cits <- data.frame(input_lensID = input_cits$data.lens_id, reference_lensID = input_cits$data.scholarly_citations, type = 'citation')
         
         rv$network <- rbind(input_refs, input_cits)
+     
     })
     #network viz
     output$force <- renderForceNetwork({
         network=rv$network
-        print(network)
-         tmp1<-data.frame("IDs"=network$input_lensID, "Group"= network$type)
-         tmp2<-data.frame("IDs"=network$reference_lensID, "Group"= network$type)
-         tmp=rbind(tmp1,tmp2)
-         Nodes=unique(tmp)
-         
-         
-         # make a links data frame using the indexes (0-based) of nodes in 'nodes'
-         links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
-                             target = match(network$reference_lensID,Nodes$IDs) - 1)
-         links<-links %>% 
-             drop_na()
-         
-         n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
-                             Target = "target", NodeID ="IDs", Group="Group", 
-                             opacity = 1, opacityNoHover = 1, zoom=TRUE, colourScale = JS('d3.scaleOrdinal().range(["#a50026","#4575b4"]);'))
-            })
+        inputarticles=network$input_lensID
+        print(inputarticles)
+        tmp1<-data.frame("IDs"=network$input_lensID, "Group"= network$type)
+        tmp2<-data.frame("IDs"=network$reference_lensID, "Group"= network$type)
+        tmp=rbind(tmp1,tmp2)
+        Nodes=unique(tmp)
+        Nodes=Nodes %>% 
+            mutate(Group2=ifelse(IDs%in%inputarticles, 0, Group)) %>% 
+            mutate(Group2=as.character(Group2)) %>% 
+            mutate(Group2=dplyr::recode(Group2, "0"="input", "1"="reference", "2"="citation"))
+        
+        
+        # make a links data frame using the indexes (0-based) of nodes in 'nodes'
+        links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
+                            target = match(network$reference_lensID,Nodes$IDs) - 1)
+        
+        links<-links %>% 
+            drop_na()
+        
+        n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
+                            Target = "target", NodeID ="IDs", Group="Group2", 
+                            linkColour = "black",
+                            opacity = 1, opacityNoHover = 1, zoom=TRUE, legend=TRUE,colourScale = JS('d3.scaleOrdinal().range(["black", "#a50026","#4575b4"]);'))
+        
+        n_net$x$nodes$hyperlink<-paste0('https://www.lens.org/lens/search/scholar/list?q=lens_id:', Nodes$IDs, '&p=0&n=10&s=_score&d=%2B&f=false&e=false&l=en&authorField=author&dateFilterField=publishedYear&orderBy=%2B_score&presentation=false&stemmed=true&useAuthorId=false')
+        n_net$x$options$clickAction = 'window.open(d.hyperlink)'
+        n_net
+                   })
 }
 
 # Run the application 
