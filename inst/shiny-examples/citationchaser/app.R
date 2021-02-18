@@ -310,6 +310,14 @@ server <- function(input, output) {
             mutate(Group2=as.character(Group2)) %>% 
             mutate(Group2=dplyr::recode(Group2, "0"="input", "1"="reference", "2"="citation"))
         
+        Nodes2<-Nodes %>% 
+            filter(!Group2=="input")
+        
+        inputs<-Nodes %>% 
+            filter(Group2=="input") %>% 
+            distinct(.,IDs,Group2, .keep_all=TRUE)
+        
+        Nodes=rbind(inputs, Nodes2)
         
         # make a links data frame using the indexes (0-based) of nodes in 'nodes'
         links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
