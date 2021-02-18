@@ -1,14 +1,14 @@
 Package: citationchaser
 Title: Perform forward and backwards chasing in evidence syntheses
 Version: 0.0.3
-Authors@R: 
+Authors@R:c(
   person(given = "Neal",
          family = "Haddaway",
          role = c("aut", "cre"),
          email = "nealhaddaway@gmail.com",
          comment = c(ORCID = "0000-0003-3902-2234")),
   person(given = "Matthew", family = "Grainger", role = "ctb"),
-  person(given = "Charles", family = "Gray", role = "ctb")
+  person(given = "Charles", family = "Gray", role = "ctb"))
 Description: In searching for research articles, we often want to 
   obtain lists of references from across studies, and also obtain lists 
   of articles that cite a particular study. In systematic reviews, this 
@@ -29,6 +29,7 @@ Imports:
   expss,
   httr,
   jsonlite,
+  networkD3,
   tibble,
   utils
 Suggests:
