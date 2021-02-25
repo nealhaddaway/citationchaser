@@ -144,7 +144,7 @@ get_refs <- function(article_list,
     
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
                                 paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
-                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.\n\n')
+                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' unique records on lens.org following deduplication.\n\n')
     
     # define query function
     run_request <- function(input){
@@ -178,7 +178,7 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
-    citations_df <- cit_results
+    cit_results <- cit_results[!duplicated(cit_results$data.lens_id),]
     all_results_cit <- cit_results$data.lens_id
     
     download_report_cit <- paste0('Your query returned ', nrow(cit_results), ' records from lens.org.\n\n')
@@ -228,7 +228,7 @@ get_refs <- function(article_list,
     report_cit <- paste0('Query date/time:\n', tStart_cit, '\n\n#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit)
     cat(report_cit)
     
-    return(list(report = report_cit, citations_ris = citations_ris, citations_df = citations_df, inputs_ris = inputs_ris, inputs_df = inputs_df))
+    return(list(report = report_cit, citations_ris = citations_ris, citations_df = cit_results, inputs_ris = inputs_ris, inputs_df = inputs_df))
     
     if (save_ris == TRUE) {
       write.table(citations_ris, file = "citations.ris", sep = "")
@@ -262,7 +262,7 @@ get_refs <- function(article_list,
     
     stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. The input articles contained the following identifiable references on lens.org: \n',
                                 paste(paste0('doi: ', article_list, ', references: ', record_list[["data"]][["references_count"]]), collapse = '\n'),
-                                '\n\nThis corresponds to ', deduped_references, ' unique records.\n\n')
+                                '\n\nThis corresponds to ', deduped_references, ' unique records on lens.org following deduplication.\n\n')
     
     # define query function
     run_request <- function(input){
@@ -296,7 +296,7 @@ get_refs <- function(article_list,
           Sys.sleep(60 - t) # pause to limit requests below 10/min 
         }
       }
-      references_df <- ref_results
+      ref_results <- ref_results[!duplicated(ref_results$data.lens_id),]
       all_results_ref <- ref_results$data.lens_id
       
     download_report_ref <- paste0('Your query returned ', nrow(ref_results), ' records from lens.org.\n\n')
@@ -346,7 +346,7 @@ get_refs <- function(article_list,
     report_ref <- paste0('Query date/time:\n', tStart_ref, '\n\n#References summary\n', stage1_report_ref, '#Download\n', download_report_ref, '#RIS file build\n', risbuild_report_ref)
     cat(report_ref)
     
-    return(list(report = report_ref, references_ris = references_ris, references_df = references_df, inputs_ris = inputs_ris, inputs_df = inputs_df))
+    return(list(report = report_ref, references_ris = references_ris, references_df = ref_results, inputs_ris = inputs_ris, inputs_df = inputs_df))
     
     if (save_ris == TRUE) {
       write.table(references_ris, file = "references.ris", sep = "")
@@ -378,7 +378,7 @@ get_refs <- function(article_list,
     
     stage1_report_ref <- paste0('Your ', input_number, ' articles contained a total of ', all_references, ' references. The input articles contained the following identifiable references on lens.org: \n',
                                 paste(paste0('doi: ', article_list, ', references: ', record_list[["data"]][["references_count"]]), collapse = '\n'),
-                                '\n\nThis corresponds to ', deduped_references, ' unique records.\n\n')
+                                '\n\nThis corresponds to ', deduped_references, ' unique records on lens.org following deduplication.\n\n')
     
     # define query function
     run_request <- function(input){
@@ -412,7 +412,7 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
-    references_df <- ref_results
+    ref_results <- ref_results[!duplicated(ref_results$data.lens_id),]
     all_results_ref <- ref_results$data.lens_id
     
     download_report_ref <- paste0('Your query returned ', nrow(ref_results), ' records from lens.org.\n\n')
@@ -487,7 +487,7 @@ get_refs <- function(article_list,
     
     stage1_report_cit <- paste0('Your ', input_number, ' articles were cited a total of ', all_citations, ' times. The following number of citations for each input article were found on lens.org:\n\n',
                                 paste(paste0('doi: ', article_list, ', citations: ', record_list[["data"]][["scholarly_citations_count"]]), collapse = '\n'),
-                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' records on lens.org.\n\n')
+                                '\nIn total, this corresponds to a total of ', length(citations_unique), ' unique records on lens.org following deduplication.\n\n')
     
     # define query function
     run_request <- function(input){
@@ -521,7 +521,7 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
-    citations_df <- cit_results
+    cit_results <- cit_results[!duplicated(cit_results$data.lens_id),]
     all_results_cit <- cit_results$data.lens_id
     
     download_report_cit <- paste0('Your query returned ', nrow(cit_results), ' records from lens.org.\n\n')
@@ -571,7 +571,7 @@ get_refs <- function(article_list,
     report_cit <- paste0('\n**********\n\n', 'Query date/time:\n', tStart_cit, '\n\n#Citations summary\n', stage1_report_cit, '#Download\n', download_report_cit, '#RIS file build\n', risbuild_report_cit)
     cat(report_cit)
     
-    return(list(report = c(report_ref, report_cit), citations_ris = citations_ris, citations_df = citations_df, references_ris = references_ris, references_df = references_df, inputs_ris = inputs_ris, inputs_df = inputs_df))
+    return(list(report = c(report_ref, report_cit), citations_ris = citations_ris, citations_df = cit_results, references_ris = references_ris, references_df = ref_results, inputs_ris = inputs_ris, inputs_df = inputs_df))
     
     if (save_ris == TRUE) {
       write.table(citations_ris, file = "citations.ris", sep = "")
