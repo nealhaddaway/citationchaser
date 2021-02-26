@@ -124,6 +124,7 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
+    cit_results <- cit_results[!duplicated(cit_results$data.lens_id),]
     all_results_cit <- cit_results$data.lens_id
     
     # convert json to ris style
@@ -244,6 +245,7 @@ get_refs <- function(article_list,
         Sys.sleep(60 - t) # pause to limit requests below 10/min 
       }
     }
+    ref_results <- ref_results[!duplicated(ref_results$data.lens_id),]
     all_results_ref <- ref_results$data.lens_id
     
     # convert json to ris style

@@ -12,6 +12,8 @@ library(expss)
 library(scales)
 library(tidyr)
 library(networkD3)
+library(stringr)
+library(shinybusy)
 
 source('functions.R')
 
@@ -109,8 +111,11 @@ ui <- navbarPage("citationchaser",
                        condition='input.find_inputs!=null && input.find_inputs!=""',
                        h3('Your input articles'),
                        br(),
+                       textOutput('article_report'),
+                       br(),
                        downloadButton('input_ris', 'Download an RIS file of your articles (including abstracts)'),
                        br(),br()),
+                   add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                    dataTableOutput('article_ref')
             )
         )
@@ -129,6 +134,7 @@ ui <- navbarPage("citationchaser",
                             condition='input.find_refs!=null && input.find_refs!=""',
                             downloadButton('refs_ris', 'Download an RIS file of referenced articles (including abstracts)')),
                         br(),
+                        add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         dataTableOutput('references')
                  )
              )
@@ -147,6 +153,7 @@ ui <- navbarPage("citationchaser",
                             condition='input.find_cits!=null && input.find_cits!=""',
                             downloadButton('cits_ris', 'Download an RIS file of citing articles (including abstracts)')),
                         br(),
+                        add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         dataTableOutput('citations')
                  )
              )
@@ -155,9 +162,10 @@ ui <- navbarPage("citationchaser",
              fluidRow(
                  column(12,
                         h3('Visualise the citation network'),
-                        actionButton("get_network", "Visualise"), tags$img(height = 50, src = "legend.png"),
-                        'The network visualisation may take a few moments to generate. Zoom in and out using your mouse wheel or two fingers on a trackpad. Move around the network by clicking and dragging.',
+                        actionButton("get_network", "Visualise"), tags$img(height = 80, src = "legend.png"),
+                        'The network visualisation may take a few moments to generate. Zoom in and out using your mouse wheel or two fingers on a trackpad. Move around the network by clicking and dragging. Click on a node to see the record on Lens.org.',
                         br(),
+                        add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         conditionalPanel(
                             condition='input.get_network!=null && input.get_network!=""',
                             forceNetworkOutput("force", height = '1100px'))
@@ -208,9 +216,14 @@ server <- function(input, output) {
         article_ref <- get_citation(input$article_ids, 
                                     type = input$type, 
                                     token = input$token)
+        rv$article_number <- 1 + str_count(input$article_ids,",")
         rv$articles <- article_ref$display
         rv$articles_ris <- article_ref$ris
         rv$articles_df <- article_ref$df
+    })
+    # render article report text
+    output$article_report <- renderText({
+        paste0('You provided ', rv$article_number, ' starting articles.')
     })
     # render articles table
     output$article_ref <- renderDataTable({
@@ -241,7 +254,7 @@ server <- function(input, output) {
     output$references <- renderDataTable({
         rv$refs_display
     }, rownames = FALSE, options = list(dom = 'tpl'))
-    # render report text
+    # render references report text
     output$refs_report <- renderText({
         rv$refs_report
     })
@@ -270,7 +283,7 @@ server <- function(input, output) {
     output$citations <- renderDataTable({
         rv$cits_display
     }, rownames = FALSE, options = list(dom = 'tpl'))
-    # render report text
+    # render citations report text
     output$cits_report <- renderText({
         rv$cits_report
     })
@@ -294,27 +307,47 @@ server <- function(input, output) {
         input_cits <- data.frame(input_lensID = input_cits$data.lens_id, reference_lensID = input_cits$data.scholarly_citations, type = 'citation')
         
         rv$network <- rbind(input_refs, input_cits)
+     
     })
     #network viz
     output$force <- renderForceNetwork({
         network=rv$network
-        print(network)
-         tmp1<-data.frame("IDs"=network$input_lensID, "Group"= network$type)
-         tmp2<-data.frame("IDs"=network$reference_lensID, "Group"= network$type)
-         tmp=rbind(tmp1,tmp2)
-         Nodes=unique(tmp)
-         
-         
-         # make a links data frame using the indexes (0-based) of nodes in 'nodes'
-         links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
-                             target = match(network$reference_lensID,Nodes$IDs) - 1)
-         links<-links %>% 
-             drop_na()
-         
-         n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
-                             Target = "target", NodeID ="IDs", Group="Group", 
-                             opacity = 1, opacityNoHover = 1, zoom=TRUE, colourScale = JS('d3.scaleOrdinal().range(["#a50026","#4575b4"]);'))
-            })
+        inputarticles=network$input_lensID
+        print(inputarticles)
+        tmp1<-data.frame("IDs"=network$input_lensID, "Group"= network$type)
+        tmp2<-data.frame("IDs"=network$reference_lensID, "Group"= network$type)
+        tmp=rbind(tmp1,tmp2)
+        Nodes=unique(tmp)
+        Nodes=Nodes %>% 
+            mutate(Group2=ifelse(IDs%in%inputarticles, 0, Group)) %>% 
+            mutate(Group2=as.character(Group2)) %>% 
+            mutate(Group2=dplyr::recode(Group2, "0"="input", "1"="reference", "2"="citation"))
+        
+        Nodes2<-Nodes %>% 
+            filter(!Group2=="input")
+        
+        inputs<-Nodes %>% 
+            filter(Group2=="input") %>% 
+            distinct(.,IDs,Group2, .keep_all=TRUE)
+        
+        Nodes=rbind(inputs, Nodes2)
+        
+        # make a links data frame using the indexes (0-based) of nodes in 'nodes'
+        links <- data.frame(source = match(network$input_lensID, Nodes$IDs) - 1,
+                            target = match(network$reference_lensID,Nodes$IDs) - 1)
+        
+        links<-links %>% 
+            drop_na()
+        
+        n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
+                            Target = "target", NodeID ="IDs", Group="Group2", 
+                            linkColour = "black",
+                            opacity = 1, opacityNoHover = 1, zoom=TRUE, colourScale = JS('d3.scaleOrdinal().range(["black", "#a50026","#4575b4"]);'))
+        
+        n_net$x$nodes$hyperlink<-paste0('https://www.lens.org/lens/search/scholar/list?q=lens_id:', Nodes$IDs, '&p=0&n=10&s=_score&d=%2B&f=false&e=false&l=en&authorField=author&dateFilterField=publishedYear&orderBy=%2B_score&presentation=false&stemmed=true&useAuthorId=false')
+        n_net$x$options$clickAction = 'window.open(d.hyperlink)'
+        n_net
+                   })
 }
 
 # Run the application 
