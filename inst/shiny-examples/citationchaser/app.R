@@ -12,6 +12,8 @@ library(expss)
 library(scales)
 library(tidyr)
 library(networkD3)
+library(stringr)
+library(shinybusy)
 
 source('functions.R')
 
@@ -109,8 +111,11 @@ ui <- navbarPage("citationchaser",
                        condition='input.find_inputs!=null && input.find_inputs!=""',
                        h3('Your input articles'),
                        br(),
+                       textOutput('article_report'),
+                       br(),
                        downloadButton('input_ris', 'Download an RIS file of your articles (including abstracts)'),
                        br(),br()),
+                   add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                    dataTableOutput('article_ref')
             )
         )
@@ -129,6 +134,7 @@ ui <- navbarPage("citationchaser",
                             condition='input.find_refs!=null && input.find_refs!=""',
                             downloadButton('refs_ris', 'Download an RIS file of referenced articles (including abstracts)')),
                         br(),
+                        add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         dataTableOutput('references')
                  )
              )
@@ -147,6 +153,7 @@ ui <- navbarPage("citationchaser",
                             condition='input.find_cits!=null && input.find_cits!=""',
                             downloadButton('cits_ris', 'Download an RIS file of citing articles (including abstracts)')),
                         br(),
+                        add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         dataTableOutput('citations')
                  )
              )
@@ -158,6 +165,7 @@ ui <- navbarPage("citationchaser",
                         actionButton("get_network", "Visualise"), tags$img(height = 50, src = "legend.png"),
                         'The network visualisation may take a few moments to generate. Zoom in and out using your mouse wheel or two fingers on a trackpad. Move around the network by clicking and dragging.',
                         br(),
+                        add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         conditionalPanel(
                             condition='input.get_network!=null && input.get_network!=""',
                             forceNetworkOutput("force", height = '1100px'))
@@ -208,9 +216,14 @@ server <- function(input, output) {
         article_ref <- get_citation(input$article_ids, 
                                     type = input$type, 
                                     token = input$token)
+        rv$article_number <- 1 + str_count(input$article_ids,",")
         rv$articles <- article_ref$display
         rv$articles_ris <- article_ref$ris
         rv$articles_df <- article_ref$df
+    })
+    # render article report text
+    output$article_report <- renderText({
+        paste0('You provided ', rv$article_number, ' starting articles.')
     })
     # render articles table
     output$article_ref <- renderDataTable({
@@ -241,7 +254,7 @@ server <- function(input, output) {
     output$references <- renderDataTable({
         rv$refs_display
     }, rownames = FALSE, options = list(dom = 'tpl'))
-    # render report text
+    # render references report text
     output$refs_report <- renderText({
         rv$refs_report
     })
@@ -270,7 +283,7 @@ server <- function(input, output) {
     output$citations <- renderDataTable({
         rv$cits_display
     }, rownames = FALSE, options = list(dom = 'tpl'))
-    # render report text
+    # render citations report text
     output$cits_report <- renderText({
         rv$cits_report
     })
