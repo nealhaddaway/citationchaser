@@ -342,7 +342,7 @@ server <- function(input, output) {
         n_net<-forceNetwork(Links = links, Nodes = Nodes, Source = "source",
                             Target = "target", NodeID ="IDs", Group="Group2", 
                             linkColour = "black",
-                            opacity = 1, opacityNoHover = 1, zoom=TRUE, legend=TRUE,colourScale = JS('d3.scaleOrdinal().range(["black", "#a50026","#4575b4"]);'))
+                            opacity = 1, opacityNoHover = 1, zoom=TRUE, colourScale = JS('d3.scaleOrdinal().range(["black", "#a50026","#4575b4"]);'))
         
         n_net$x$nodes$hyperlink<-paste0('https://www.lens.org/lens/search/scholar/list?q=lens_id:', Nodes$IDs, '&p=0&n=10&s=_score&d=%2B&f=false&e=false&l=en&authorField=author&dateFilterField=publishedYear&orderBy=%2B_score&presentation=false&stemmed=true&useAuthorId=false')
         n_net$x$options$clickAction = 'window.open(d.hyperlink)'
