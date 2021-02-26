@@ -163,7 +163,7 @@ ui <- navbarPage("citationchaser",
                  column(12,
                         h3('Visualise the citation network'),
                         actionButton("get_network", "Visualise"), tags$img(height = 80, src = "legend.png"),
-                        'The network visualisation may take a few moments to generate. Zoom in and out using your mouse wheel or two fingers on a trackpad. Move around the network by clicking and dragging.',
+                        'The network visualisation may take a few moments to generate. Zoom in and out using your mouse wheel or two fingers on a trackpad. Move around the network by clicking and dragging. Click on a node to see the record on Lens.org.',
                         br(),
                         add_busy_spinner(spin = "fading-circle", color = "#19d0fc", margins = c(70, 20)),
                         conditionalPanel(
