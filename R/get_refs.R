@@ -221,12 +221,12 @@ get_refs <- function(article_list,
     
     # ris build report
     ris_records_cit <- lengths(regmatches(level1_ris_cit, gregexpr("TY  - ", level1_ris_cit)))
-    risbuild_report_cit <- paste0('Your output report contains ', ris_records_cit, ' records.\n\n')
+    risbuild_report_cit <- paste0('Your RIS file contains ', ris_records_cit, ' records.\n\n')
     
     citations_ris <- level1_ris_cit
     
     if (save_ris == TRUE) {
-      risbuild_report_cit <- paste0('Your output report contains ', ris_records_cit, ' records and has been saved as "citations.ris" in your working directory.\n\n')
+      risbuild_report_cit <- paste0('Your RIS file contains ', ris_records_cit, ' records and has been saved as "citations.ris" in your working directory.\n\n')
       write.table(citations_ris, file = "citations.ris", sep = "")
     }
     
@@ -340,12 +340,12 @@ get_refs <- function(article_list,
     
     # ris build report
     ris_records_ref <- lengths(regmatches(level1_ris_ref, gregexpr("TY  - ", level1_ris_ref)))
-    risbuild_report_ref <- paste0('Your output report contains ', ris_records_ref, ' records.\n\n')
+    risbuild_report_ref <- paste0('Your RIS file contains ', ris_records_ref, ' records.\n\n')
     
     references_ris <- level1_ris_ref
     
     if (save_ris == TRUE) {
-      risbuild_report_ref <- paste0('Your output report contains ', ris_records_ref, ' records and has been saved as "references.ris" in your working directory.\n\n')
+      risbuild_report_ref <- paste0('Your RIS file contains ', ris_records_ref, ' records and has been saved as "references.ris" in your working directory.\n\n')
       write.table(references_ris, file = "references.ris", sep = "")
     }
     
@@ -458,7 +458,7 @@ get_refs <- function(article_list,
     
     # ris build report
     ris_records_ref <- lengths(regmatches(level1_ris_ref, gregexpr("TY  - ", level1_ris_ref)))
-    risbuild_report_ref <- paste0('Your output report contains ', ris_records_ref, ' records.\n\n')
+    risbuild_report_ref <- paste0('Your RIS file contains ', ris_records_ref, ' records.\n\n')
     
     references_ris <- level1_ris_ref
     
@@ -567,13 +567,13 @@ get_refs <- function(article_list,
     
     # ris build report
     ris_records_cit <- lengths(regmatches(level1_ris_cit, gregexpr("TY  - ", level1_ris_cit)))
-    risbuild_report_cit <- paste0('Your output report contains ', ris_records_cit, ' records.\n\n')
+    risbuild_report_cit <- paste0('Your RIS file contains ', ris_records_cit, ' records.\n\n')
     
     citations_ris <- level1_ris_cit
     
     if (save_ris == TRUE) {
-      risbuild_report_ref <- paste0('Your output report contains ', ris_records_ref, ' records and has been saved as "references.ris" in your working directory.\n\n')
-      risbuild_report_cit <- paste0('Your output report contains ', ris_records_cit, ' records and has been saved as "citations.ris" in your working directory.\n\n')
+      risbuild_report_ref <- paste0('Your RIS file contains ', ris_records_ref, ' records and has been saved as "references.ris" in your working directory.\n\n')
+      risbuild_report_cit <- paste0('Your RIS file contains ', ris_records_cit, ' records and has been saved as "citations.ris" in your working directory.\n\n')
       write.table(citations_ris, file = "citations.ris", sep = "")
       write.table(references_ris, file = "references.ris", sep = "")
     }
