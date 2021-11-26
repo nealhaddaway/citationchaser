@@ -30,8 +30,10 @@ Imports:
   httr,
   jsonlite,
   networkD3,
+  scales,
   tibble,
-  utils
+  utils,
+  data.table
 Suggests:
   knitr,
   rmarkdown

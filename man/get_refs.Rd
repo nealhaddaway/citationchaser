@@ -4,7 +4,7 @@
 \alias{get_refs}
 \title{Automated citation chasing in systematic reviews}
 \usage{
-get_refs(article_list, type = "doi", get_records, save_ris = FALSE, token)
+get_refs(article_list, type = "doi", get_records, token)
 }
 \arguments{
 \item{article_list}{List of article identifiers for which the reference
@@ -21,18 +21,13 @@ Academic ID), "coreid" (CORE identifier), lens_id" (The Lens.org ID),
 within the input articles ('references'), records citing the input articles
 ('citations'), or both ('both').}
 
-\item{save_ris}{Option to save the resultant ris file locally in the working
-directory. The default is FALSE.}
-
 \item{token}{An access key for the lens.org API. Tokens can be obtained by
 applying for scholarly API access and creating a token once approved. See
 'https://www.lens.org/lens/user/subscriptions#scholar' for further details.}
 }
 \value{
-A report is printed to the console and the report, RIS files for the
-input articles, references and citations (depending on 'get_records'), and
-dataframes of the input articles, references and citations are returned. If
-'save_ris=TRUE', the RIS file(s) returned are saved to the working directory.
+An RIS file is saved to the working directory. A report is printed
+to the console.
 }
 \description{
 This function takes a list of articles in the form of established
@@ -50,7 +45,7 @@ article_list <- c("10.1007/978-3-642-37048-9_13",
                   "10.5194/bg-13-3619-2016", 
                   "10.1016/j.agee.2012.09.006")
   token <- 'token'
-  refs <- get_refs(article_list, save_ris = TRUE, get_records = 'both', token = token)
-  refs$references_df
+  refs <- get_refs(article_list, get_records = 'references', token = token)
+  refs
   }
 }
