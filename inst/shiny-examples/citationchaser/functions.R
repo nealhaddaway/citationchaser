@@ -29,6 +29,7 @@
 #' @importFrom utils write.table
 #' @importFrom tibble tibble
 #' @importFrom dplyr mutate group_split bind_rows
+#' @importFrom scales comma
 #' @export
 #' @examples
 #' \dontrun{

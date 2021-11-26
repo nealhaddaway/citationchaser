@@ -29,6 +29,7 @@
 #' @importFrom utils write.table
 #' @importFrom tibble tibble
 #' @importFrom dplyr mutate group_split bind_rows
+#' @importFrom scales comma
 #' @export
 #' @examples
 #' \dontrun{
@@ -541,7 +542,9 @@ getLENSData <- function(token, query){
 #' @importFrom data.table data.table
 #' @examples 
 #' \dontrun{
-#' article_list <- c("10.1007/978-3-642-37048-9_13", "10.1111/sum.12030", "10.5194/bg-13-3619-2016", "10.1016/j.agee.2012.09.006")
+#' article_list <- c("10.1007/978-3-642-37048-9_13", 
+#'   "10.1111/sum.12030", "10.5194/bg-13-3619-2016", 
+#'   "10.1016/j.agee.2012.09.006")
 #' results <- get_citation(article_list)
 #' articles <- results$display
 #' }

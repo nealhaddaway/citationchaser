@@ -30,6 +30,7 @@ Imports:
   httr,
   jsonlite,
   networkD3,
+  scales,
   tibble,
   utils,
   data.table
