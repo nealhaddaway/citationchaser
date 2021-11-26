@@ -31,7 +31,8 @@ Imports:
   jsonlite,
   networkD3,
   tibble,
-  utils
+  utils,
+  data.table
 Suggests:
   knitr,
   rmarkdown
