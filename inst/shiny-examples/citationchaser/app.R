@@ -17,7 +17,7 @@ suppressPackageStartupMessages({
 
 options(shiny.sanitize.errors = TRUE)
 
-source('functions new.R')
+source('functions.R')
 
 # error supression CSS
 tags$style(type="text/css",
@@ -208,7 +208,7 @@ server <- function(input, output, session) {
     
     rv <- reactiveValues()
     
-    # detect redirect PMIDs in Shiny URL
+    # detect redirect IDs in Shiny URL
     observe({
         x <- parseQueryString(session$clientData$url_search)
         if (is.null(x$pmids) == FALSE){
