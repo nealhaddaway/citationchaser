@@ -549,7 +549,7 @@ getLENSData <- function(token, query){
 #' @export
 get_citation <- function(article_list, 
                          type = 'doi',
-                         token = 'WCFlpCtuJXYI1sDhZcZ8y7hHpri0SEmTnLNkeU4OEM5JTQRNXB9w'){
+                         token = 'token'){
   
   if(length(article_list) == 1){
     article_list <- trimws(unlist(strsplit(article_list, '[,]')))
