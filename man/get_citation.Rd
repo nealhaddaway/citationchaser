@@ -4,11 +4,7 @@
 \alias{get_citation}
 \title{Find citation based on identifier}
 \usage{
-get_citation(
-  article_list,
-  type = "doi",
-  token = "WCFlpCtuJXYI1sDhZcZ8y7hHpri0SEmTnLNkeU4OEM5JTQRNXB9w"
-)
+get_citation(article_list, type = "doi", token = "token")
 }
 \arguments{
 \item{article_list}{List of article identifiers for which the reference

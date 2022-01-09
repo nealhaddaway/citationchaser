@@ -1,7 +1,7 @@
 Package: citationchaser
 Title: Perform forward and backwards chasing in evidence syntheses
 Version: 0.0.3
-Authors@R:c(
+Authors@R: c(
   person(given = "Neal",
          family = "Haddaway",
          role = c("aut", "cre"),
@@ -26,7 +26,7 @@ Description: In searching for research articles, we often want to
   Academic Graph and CORE; 'https://www.lens.org'). 
 Imports:
   dplyr,
-  expss,
+  maditr,
   httr,
   jsonlite,
   networkD3,
@@ -42,6 +42,6 @@ License: GPL + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Depends: 
     R (>= 2.10)
