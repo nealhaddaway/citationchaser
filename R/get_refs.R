@@ -23,7 +23,7 @@
 #'   'https://www.lens.org/lens/user/subscriptions#scholar' for further details.
 #' @return An RIS file is saved to the working directory. A report is printed 
 #'   to the console. 
-#' @importFrom expss vlookup
+#' @importFrom maditr vlookup
 #' @importFrom httr content
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils write.table
@@ -311,7 +311,7 @@ get_refs <- function(article_list,
     issue_cit <- cit_results$data.issue
     publisher_cit <- cit_results$data.source.publisher
     issn_cit <- cit_results$data.source.issn
-    doi_cit <- unlist(lapply(cit_results$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+    doi_cit <- unlist(lapply(cit_results$data.external_ids, function(ch) maditr::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     # generate data table for Shiny UI
     level1_table_cit <- data.table(authors = authors_cit,
@@ -327,7 +327,7 @@ get_refs <- function(article_list,
     
     # generate RIS file
     level1_ris_cit <- paste(paste0('\n',
-                                   'TY  - ', expss::vlookup(publication_type_cit, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
+                                   'TY  - ', maditr::vlookup(publication_type_cit, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
                                    'AU  - ', authors_cit, '\n',
                                    'TI  - ', title_cit, '\n',
                                    'PY  - ', year_cit, '\n',
@@ -457,7 +457,7 @@ get_refs <- function(article_list,
     issue_ref <- ref_results$data.issue
     publisher_ref <- ref_results$data.source.publisher
     issn_ref <- ref_results$data.source.issn
-    doi_ref <- unlist(lapply(ref_results$data.external_ids, function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+    doi_ref <- unlist(lapply(ref_results$data.external_ids, function(ch) maditr::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     level1_table_ref <- data.table(authors = authors_ref,
                                    year = year_ref,
@@ -471,7 +471,7 @@ get_refs <- function(article_list,
                                    doi = doi_ref)
     
     level1_ris_ref <- paste(paste0('\n',
-                                   'TY  - ', expss::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
+                                   'TY  - ', maditr::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
                                    'AU  - ', authors_ref, '\n',
                                    'TI  - ', title_ref, '\n',
                                    'PY  - ', year_ref, '\n',
@@ -536,7 +536,7 @@ getLENSData <- function(token, query){
 #'   applying for scholarly API access and creating a token once approved. See 
 #'   'https://www.lens.org/lens/user/subscriptions#scholar' for further details.
 #' @return A dataframe containing the matching citation from Lens.org.
-#' @importFrom expss vlookup
+#' @importFrom maditr vlookup
 #' @importFrom httr content
 #' @importFrom jsonlite fromJSON
 #' @importFrom data.table data.table
@@ -605,7 +605,7 @@ get_citation <- function(article_list,
   issue <- record_list[["data"]][["issue"]]
   publisher <- record_list[["data"]][["source"]][["publisher"]]
   issn <- record_list[["data"]][["source"]][["issn"]]
-  doi <- unlist(lapply(record_list[["data"]][["external_ids"]], function(ch) expss::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
+  doi <- unlist(lapply(record_list[["data"]][["external_ids"]], function(ch) maditr::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
   
   article_table <- data.table(authors = authors,
                               year = year,
@@ -621,7 +621,7 @@ get_citation <- function(article_list,
                               Lens_cited = citation_count)
   
   article_ris <- paste(paste0('\n',
-                              'TY  - ', expss::vlookup(publication_type, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
+                              'TY  - ', maditr::vlookup(publication_type, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
                               'AU  - ', authors, '\n',
                               'TI  - ', title, '\n',
                               'PY  - ', year, '\n',
