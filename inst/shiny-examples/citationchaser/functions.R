@@ -18,18 +18,21 @@
 #' @param get_records Specification of whether to look for records referenced 
 #'   within the input articles ('references'), records citing the input articles 
 #'   ('citations'), or both ('both'). 
+#' @param save_object Option to save the resultant ris file as an object in 
+#'   the Global Environment. The default is FALSE.
 #' @param token An access key for the lens.org API. Tokens can be obtained by 
 #'   applying for scholarly API access and creating a token once approved. See 
 #'   'https://www.lens.org/lens/user/subscriptions#scholar' for further details.
 #' @return An RIS file is saved to the working directory. A report is printed 
-#'   to the console. 
+#'   to the console. If 'save_object=TRUE', the RIS file is returned as an 
+#'   object
 #' @importFrom maditr vlookup
 #' @importFrom httr content
 #' @importFrom jsonlite fromJSON
 #' @importFrom utils write.table
 #' @importFrom tibble tibble
 #' @importFrom dplyr mutate group_split bind_rows
-#' @importFrom scales comma
+#' @importFrom MESS cumsumbinning
 #' @export
 #' @examples
 #' \dontrun{
@@ -44,6 +47,7 @@
 get_refs <- function(article_list,
                      type = 'doi',
                      get_records,
+                     save_object = FALSE,
                      token) {
   
   # set the maximum number of results returned for each query
@@ -53,13 +57,18 @@ get_refs <- function(article_list,
   if(length(article_list) == 1){
     article_list <- trimws(unlist(strsplit(article_list, '[,]')))
   }
+  print('Input record list:')
+  print(article_list)
   
   ## input article search
   # build query for input article search
   request1 <- paste0('{\n\t"query": {\n\t\t"terms": {\n\t\t\t"',type,'": ["', paste0('', paste(article_list, collapse = '", "'), '"'),']\n\t\t}\n\t},\n\t"size":500\n}')
+  print('Input article request:')
+  print(request1)
   
   # perform article search and extract text results
   data <- getLENSData(token, request1)
+  print('Input request executed.')
   
   # report requests remaining within the limit (currently 50/min)
   requests_remaining <- data[["headers"]][["x-rate-limit-remaining-request-per-minute"]]
@@ -70,15 +79,20 @@ get_refs <- function(article_list,
   
   # convert json output from article search to list
   record_list <- jsonlite::fromJSON(record_json) 
+  print('Results converted to df from JSON output:')
+  print(record_list$results)
   
   # error messages
   if (data$status_code == 404){
+    print('Error 404: no matched records')
     return('Warning: Your search returned no matched results. Please double check your input article identifiers and try again.')
   }
   if (data$status_code == 429){
+    print('Error 429: system overloaded')
     return('Warning: Right now there are too many people using citationchaser. This has been logged and we will endeavour to increase the bandwith as soon as possible. Please try again later.')
   }
   if (record_list$total == 0){
+    print('Error 1: no matched records')
     return('Warning: Your search returned no matched results. Please double check your input article identifiers and try again.')
   }
   
@@ -87,47 +101,69 @@ get_refs <- function(article_list,
   
   # list input article lens IDs (for later use)
   articles_id <- record_list[["data"]][["lens_id"]]
+  print('Returned records from input request:')
+  print(articles_id)
   
   ### search for citations of input articles
   if (get_records == 'citations') {
+    print('Seeking citations...')
+    
+    # citations per article
+    citation_count <- record_list[["data"]][["scholarly_citations_count"]]
+    citation_count[is.na(citation_count)] <- 0
+    print('Citations per record sought:')
+    print(citation_count)
+    # sum of all citations
+    all_citations <- sum(citation_count, na.rm = TRUE) 
+    print('Total citations sought:')
+    print(all_citations)
     
     # return error message if input article(s) have no citations
-    if (record_list[["data"]][["scholarly_citations_count"]] == 0){
+    #if (record_list[["data"]][["scholarly_citations_count"]] == 0 || is.null(record_list[["data"]][["scholarly_citations_count"]]) == TRUE){
+    if (is.null(all_citations) == TRUE || identical(all_citations, 0) == TRUE){
+      print('Error 2: no matched citations')
       return('Warning: Your input articles have no recorded citations in the Lens.org database')
     }
     
     ## group articles into chunks based on max number of results per search
-    # citations per article
-    citation_count <- record_list[["data"]][["scholarly_citations_count"]]
-    # sum of all citations
-    all_citations <- sum(citation_count, na.rm = TRUE) 
     # list citing articles per input article
     cit_by_art <- record_list[["data"]][["scholarly_citations"]]
     citations <- unlist(record_list[["data"]][["scholarly_citations"]])
+    print('Citations record list: ')
+    print(citations)
     # remove duplicates across articles
     citations_unique <- unique(citations)
+    print('Deduplicated citations record list:')
+    print(citations_unique)
     # set up dataframe for groups of articles to search
-    cit_counts_df <- tibble(articles_id,
-                            citation_count,
-                            cit_by_art)
+    cit_counts_df <- tibble::tibble(articles_id,
+                                    citation_count,
+                                    cit_by_art)
     # remove records with no citations
     cit_counts_df[is.na(cit_counts_df)] <- 0
+    cit_counts_df <- cit_counts_df[cit_counts_df$citation_count!=0,]
     # subset of records that indidivually have more citations than the max number of results per query
     single <- subset(cit_counts_df, citation_count >= max_results)
     single$export_group <- 0
     # subset of records that have fewer citations than the max number of results per query
     rest <- subset(cit_counts_df, citation_count < max_results)
-    rest <- mutate(rest,
-                   # divide by max citations allowed
-                   export_group = ceiling(cumsum(citation_count) / max_results)
-    )
+    
+    #the following code mistakenly bins around 500 (>500 records in some groups)
+    #rest <- mutate(rest,
+    #               # divide by max citations allowed
+    #               export_group = ceiling(cumsum(citation_count) / max_results))
+    #fix:
+    rest <- dplyr::mutate(rest, export_group = MESS::cumsumbinning(citation_count, 500))
+    
     # bind both dataframes back together
     cit_counts_df <- rbind(single, rest)
+    print(cit_counts_df)
     
     # get a list of vectors of the ids for searches within the export limits
     citgroups <- dplyr::group_split(cit_counts_df, export_group) 
     citgroups_single <- dplyr::group_split(single, export_group) 
     citgroups_rest <- dplyr::group_split(rest, export_group) 
+    print(citgroups_rest)
     
     # define query function
     run_request <- function(input){
@@ -148,38 +184,44 @@ get_refs <- function(article_list,
       return(results)
     }
     
-    # run the query function for each cluster of records, looping through and recording the timing
     cit_results <- data.frame()
-    tStart_cit <- Sys.time()
-    for (i in 1:length(citgroups_rest)){
-      data_cit <- run_request(unlist(citgroups_rest[[i]]$cit_by_art))
-      requests_remaining <- data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]]
-      # print the requests remaining to the Shinyapps log
-      print(paste0('Remaining requests = ', requests_remaining))
-      # extract and convert the results to a JSON
-      record_json_cit <- httr::content(data_cit, "text")
-      record_list_cit <- jsonlite::fromJSON(record_json_cit)
+    
+    # run the query function for each cluster of records, looping through and recording the timing
+    if(length(citgroups_rest) > 0){
       
-      # error messages
-      if (data_cit$status_code == 404){
-        return('Warning: Your search returned no matched results. Please double check your input article identifiers and try again.')
-      }
-      if (data_cit$status_code == 429){
-        return('Warning: Right now there are too many people using citationchaser. This has been logged and we will endeavour to increase the bandwith as soon as possible. Please try again later.')
-      }
-      if (record_list_cit$total == 0){
-        return('Warning: Your search returned no matched results. Please double check your input article identifiers and try again.')
-      }
-      
-      # convert the results to a dataframe
-      record_list_cit_df <- as.data.frame(record_list_cit)
-      cit_results <- bind_rows(cit_results, record_list_cit_df)
-      tEnd_cit <- Sys.time()
-      
-      # back off if the requests per minute is close to the limit (currently 50/min)
-      if (data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
-        t_cit <- tEnd_cit - tStart_cit
-        Sys.sleep(60 - t)
+      tStart_cit <- Sys.time()
+      for (i in 1:length(citgroups_rest)){
+        print(paste0('Running group ', i, ' request...'))
+        print(unlist(citgroups_rest[[i]]$cit_by_art))
+        data_cit <- run_request(unlist(citgroups_rest[[i]]$cit_by_art))
+        requests_remaining <- data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]]
+        # print the requests remaining to the Shinyapps log
+        print(paste0('Remaining requests = ', requests_remaining))
+        # extract and convert the results to a JSON
+        record_json_cit <- httr::content(data_cit, "text")
+        record_list_cit <- jsonlite::fromJSON(record_json_cit)
+        
+        # error messages
+        if (data_cit$status_code == 404){
+          return('Warning: Your search returned no matched results. Please double check your input article identifiers and try again.')
+        }
+        if (data_cit$status_code == 429){
+          return('Warning: Right now there are too many people using citationchaser. This has been logged and we will endeavour to increase the bandwith as soon as possible. Please try again later.')
+        }
+        if (record_list_cit$total == 0){
+          return('Warning: Your search returned no matched results. Please double check your input article identifiers and try again.')
+        }
+        
+        # convert the results to a dataframe
+        record_list_cit_df <- as.data.frame(record_list_cit)
+        cit_results <- dplyr::bind_rows(cit_results, record_list_cit_df)
+        tEnd_cit <- Sys.time()
+        
+        # back off if the requests per minute is close to the limit (currently 50/min)
+        if (data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
+          t_cit <- tEnd_cit - tStart_cit
+          Sys.sleep(60 - t)
+        }
       }
     }
     
@@ -256,9 +298,10 @@ get_refs <- function(article_list,
             new_df <- data.frame(record_list)
             # output
             record_df <- dplyr::bind_rows(record_df,new_df) # bind the latest search dataframe to the previous dataframe
-            return(record_df)
+            
           }
         }
+        return(record_df)
       }
       
       # loop through single-record queries that are less than the maximum allowed results per query
@@ -275,7 +318,7 @@ get_refs <- function(article_list,
           return('Warning: Right now there are too many people using citationchaser. This has been logged and we will endeavour to increase the bandwith as soon as possible. Please try again later.')
         }
         
-        cit_results <- bind_rows(cit_results, data_cit)
+        cit_results <- dplyr::bind_rows(cit_results, data_cit)
         #tEnd_cit <- Sys.time()
         #if (data_cit[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
         #  t_cit <- tEnd_cit - tStart_cit
@@ -314,16 +357,16 @@ get_refs <- function(article_list,
     doi_cit <- unlist(lapply(cit_results$data.external_ids, function(ch) maditr::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
     # generate data table for Shiny UI
-    level1_table_cit <- data.table(authors = authors_cit,
-                                   year = year_cit,
-                                   title = title_cit,
-                                   source_title = source_title_cit,
-                                   publisher = publisher_cit,
-                                   volume = volume_cit,
-                                   issue = issue_cit,
-                                   start_page = start_page_cit,
-                                   end_page = end_page_cit,
-                                   doi = doi_cit)
+    level1_table_cit <- data.table::data.table(authors = authors_cit,
+                                               year = year_cit,
+                                               title = title_cit,
+                                               source_title = source_title_cit,
+                                               publisher = publisher_cit,
+                                               volume = volume_cit,
+                                               issue = issue_cit,
+                                               start_page = start_page_cit,
+                                               end_page = end_page_cit,
+                                               doi = doi_cit)
     
     # generate RIS file
     level1_ris_cit <- paste(paste0('\n',
@@ -363,23 +406,24 @@ get_refs <- function(article_list,
     
     # obtain reference lists from article search
     reference_count <- record_list[["data"]][["references_count"]]
+    reference_count[is.na(reference_count)] <- 0
     all_references <- sum(reference_count, na.rm = TRUE)
     ref_by_art <- record_list[["data"]][["references"]]
     references <- unlist(record_list[["data"]][["references"]])
     references_unique <- unique(references)
     deduped_references <- length(references_unique)
     
-    ref_counts_df <- tibble(articles_id,
-                            reference_count,
-                            ref_by_art)
+    ref_counts_df <- tibble::tibble(articles_id,
+                                    reference_count,
+                                    ref_by_art)
     ref_counts_df[is.na(ref_counts_df)] <- 0
-    ref_counts_df <- mutate(ref_counts_df,
-                            # cumulatively add up citation count
-                            cumulative_n = cumsum(reference_count),
-                            # divide by max citations allowed
-                            export_group = floor(cumsum(reference_count) / 500)
-    )
-    
+    #below code not working because it was tagging excess records from one group onto the next (of 500)
+    #ref_counts_df <- dplyr::mutate(ref_counts_df,
+    #                        # cumulatively add up citation count
+    #                        cumulative_n = cumsum(reference_count),
+    #                        # divide by max citations allowed
+    #                        export_group = floor(cumsum(reference_count) / 500))
+    ref_counts_df <- dplyr::mutate(ref_counts_df, export_group = MESS::cumsumbinning(reference_count, 500))
     
     # get a list of vectors of the ids
     refgroups <- dplyr::group_split(ref_counts_df, export_group) 
@@ -406,7 +450,7 @@ get_refs <- function(article_list,
     ref_results <- data.frame()
     tStart_ref <- Sys.time()
     for (i in 1:length(refgroups)){
-      data_ref <- run_request(unlist(refgroups[[i]]$ref_by_art))
+      data_ref <- run_request(unique(unlist(refgroups[[i]]$ref_by_art)))
       requests_remaining <- data_ref[["headers"]][["x-rate-limit-remaining-request-per-minute"]]
       print(paste0('Remaining requests = ', requests_remaining))
       record_json_ref <- httr::content(data_ref, "text")
@@ -424,7 +468,7 @@ get_refs <- function(article_list,
       }
       
       record_list_ref_df <- as.data.frame(record_list_ref)
-      ref_results <- bind_rows(ref_results, record_list_ref_df)
+      ref_results <- dplyr::bind_rows(ref_results, record_list_ref_df)
       tEnd_ref <- Sys.time()
       if (data_ref[["headers"]][["x-rate-limit-remaining-request-per-minute"]] < 1){
         t_ref <- tEnd_ref - tStart_ref
@@ -459,16 +503,16 @@ get_refs <- function(article_list,
     issn_ref <- ref_results$data.source.issn
     doi_ref <- unlist(lapply(ref_results$data.external_ids, function(ch) maditr::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
     
-    level1_table_ref <- data.table(authors = authors_ref,
-                                   year = year_ref,
-                                   title = title_ref,
-                                   source_title = source_title_ref,
-                                   publisher = publisher_ref,
-                                   volume = volume_ref,
-                                   issue = issue_ref,
-                                   start_page = start_page_ref,
-                                   end_page = end_page_ref,
-                                   doi = doi_ref)
+    level1_table_ref <- data.table::data.table(authors = authors_ref,
+                                               year = year_ref,
+                                               title = title_ref,
+                                               source_title = source_title_ref,
+                                               publisher = publisher_ref,
+                                               volume = volume_ref,
+                                               issue = issue_ref,
+                                               start_page = start_page_ref,
+                                               end_page = end_page_ref,
+                                               doi = doi_ref)
     
     level1_ris_ref <- paste(paste0('\n',
                                    'TY  - ', maditr::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
@@ -522,8 +566,7 @@ getLENSData <- function(token, query){
 
 #' Find citation based on identifier
 #' 
-#' @description Function to create an article list from an input record taht can 
-#' be used in the Shiny app.
+#' @description 
 #' @param article_list List of article identifiers for which the reference 
 #'   lists will be returned. Must be a list/vector of identifiers, e.g. 
 #'   '"10.1186/s13750-018-0126-2" "10.1002/jrsm.1378"'.
@@ -549,7 +592,7 @@ getLENSData <- function(token, query){
 #' @export
 get_citation <- function(article_list, 
                          type = 'doi',
-                         token = 'token'){
+                         token = 'WCFlpCtuJXYI1sDhZcZ8y7hHpri0SEmTnLNkeU4OEM5JTQRNXB9w'){
   
   if(length(article_list) == 1){
     article_list <- trimws(unlist(strsplit(article_list, '[,]')))
@@ -638,4 +681,3 @@ get_citation <- function(article_list,
   return(list(display = article_table, ris = article_ris, df = inputs_df))
   
 }
-
