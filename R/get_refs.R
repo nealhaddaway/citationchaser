@@ -566,7 +566,10 @@ getLENSData <- function(token, query){
 
 #' Find citation based on identifier
 #' 
-#' @description 
+#' @description This function takes a list of articles in the form of established 
+#'   identifiers (e.g. digital object identifiers) and sends a request to the 
+#'   lens.org API to obtain full citation information from the Lens database for 
+#'   all sought articles.
 #' @param article_list List of article identifiers for which the reference 
 #'   lists will be returned. Must be a list/vector of identifiers, e.g. 
 #'   '"10.1186/s13750-018-0126-2" "10.1002/jrsm.1378"'.
@@ -579,13 +582,14 @@ getLENSData <- function(token, query){
 #'   applying for scholarly API access and creating a token once approved. See 
 #'   'https://www.lens.org/lens/user/subscriptions#scholar' for further details.
 #' @return A dataframe containing the matching citation from Lens.org.
-#' @importFrom expss vlookup
+#' @importFrom maditr vlookup
 #' @importFrom httr content
 #' @importFrom jsonlite fromJSON
 #' @importFrom data.table data.table
 #' @examples 
 #' \dontrun{
-#' article_list <- c("10.1007/978-3-642-37048-9_13", "10.1111/sum.12030", "10.5194/bg-13-3619-2016", "10.1016/j.agee.2012.09.006")
+#' article_list <- c("10.1007/978-3-642-37048-9_13", "10.1111/sum.12030", 
+#' "10.5194/bg-13-3619-2016", "10.1016/j.agee.2012.09.006")
 #' results <- get_citation(article_list)
 #' articles <- results$display
 #' }
@@ -648,7 +652,7 @@ get_citation <- function(article_list,
   issn <- record_list[["data"]][["source"]][["issn"]]
   doi <- unlist(lapply(record_list[["data"]][["external_ids"]], function(ch) maditr::vlookup('doi', ch, result_column = 'value', lookup_column = 'type')))
   
-  article_table <- data.table(authors = authors,
+  article_table <- data.table::data.table(authors = authors,
                               year = year,
                               title = title,
                               source_title = source_title,

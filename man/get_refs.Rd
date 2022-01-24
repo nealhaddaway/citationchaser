@@ -4,7 +4,7 @@
 \alias{get_refs}
 \title{Automated citation chasing in systematic reviews}
 \usage{
-get_refs(article_list, type = "doi", get_records, token)
+get_refs(article_list, type = "doi", get_records, save_object = FALSE, token)
 }
 \arguments{
 \item{article_list}{List of article identifiers for which the reference
@@ -21,13 +21,17 @@ Academic ID), "coreid" (CORE identifier), lens_id" (The Lens.org ID),
 within the input articles ('references'), records citing the input articles
 ('citations'), or both ('both').}
 
+\item{save_object}{Option to save the resultant ris file as an object in
+the Global Environment. The default is FALSE.}
+
 \item{token}{An access key for the lens.org API. Tokens can be obtained by
 applying for scholarly API access and creating a token once approved. See
 'https://www.lens.org/lens/user/subscriptions#scholar' for further details.}
 }
 \value{
 An RIS file is saved to the working directory. A report is printed
-to the console.
+to the console. If 'save_object=TRUE', the RIS file is returned as an
+object
 }
 \description{
 This function takes a list of articles in the form of established
