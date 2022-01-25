@@ -1,5 +1,5 @@
 Package: citationchaser
-Title: Perform forward and backwards chasing in evidence syntheses
+Title: Perform Forward and Backwards Chasing in Evidence Syntheses
 Version: 0.0.4
 Authors@R: c(
   person(given = "Neal",
