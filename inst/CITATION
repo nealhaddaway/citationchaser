@@ -1,32 +1,16 @@
-cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-authors:
-  - family-names: Haddaway
-    given-names: Neal R
-    orcid: https://orcid.org/0000-0003-3902-2234
-  - family-names: Grainger
-    given-names: Matthew J
-    orcid: https://orcid.org/0000-0001-8426-6495
-  - family-names: Gray
-    given-names: Charles T
-title: "citationchaser: An R package and Shiny app for forward and backward citations chasing in academic searching"
-version: 0.0.4
-doi: 10.5281/zenodo.4543513
-date-released: 2022-01-24
-license: GPL (>= 3)
-url: "https://github.com/nealhaddaway/citationchaser"
-preferred-citation:
-  type: article
-  authors:
-  - family-names: Haddaway
-    given-names: Neal R
-    orcid: https://orcid.org/0000-0003-3902-2234
-  - family-names: Grainger
-    given-names: Matthew J
-    orcid: https://orcid.org/0000-0001-8426-6495
-  - family-names: Gray
-    given-names: Charles T
-  doi: "10.5281/zenodo.4543513"
-  journal: "Research Synthesis Methods"
-  title: "citationchaser: An R package and Shiny app for forward and backward citations chasing in academic searching"
-  year: 2022
+citHeader("To cite citationchaser in publications, please use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "citationchaser: An R package and Shiny app for forward and backward citations chasing in academic searching",
+  author   = "Neal R Haddaway, Matthew J Grainger, and Charles T Gray",
+  journal  = "Zenodo",
+  year     = "2022",
+  url      = "https://github.com/nealhaddaway/citationchaser",
+  doi      = "10.5281/zenodo.4543513",
+  textVersion = paste(
+  "Neal R Haddaway, Matthew J Grainger, and Charles T Gray (2022).",
+  "citationchaser: An R package and Shiny app for forward and backward citations chasing in academic searching",
+  "Zenodo. https://doi.org/10.5281/zenodo.4543513"
+  )
+)
