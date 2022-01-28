@@ -8,7 +8,7 @@ This package contains functions to automate this process by making use of the Le
 
 USERS MUST OBTAIN A TOKEN FOR THE LENS.ORG SCHOLARLY API (<a href="https://www.lens.org/lens/user/subscriptions#scholar" target="_blank">available for free here</a>). The API may be time limited, but not rate limited. Requests for tokens may need initial approval from The Lens.
 
-A shiny app version of the package is available [here](https://estech.shinyapps.io/citationchaser/). This version requires no Lens.org API and is immediately usable and free.
+***A shiny app version of the package is available [here](https://estech.shinyapps.io/citationchaser/). This version requires no Lens.org API and is immediately usable and ENTIRELY FREE.***  
 
 Install the package using the following code:
 `devtools::install_github("nealhaddaway/citationchaser")`
