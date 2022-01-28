@@ -23,6 +23,7 @@ Haddaway, N. R., Grainger, M. J., Gray, C. T. 2021. citationchaser: An R package
 ![GitHub all releases](https://img.shields.io/github/downloads/nealhaddaway/citationchaser/total)
 ![GitHub Release Date](https://img.shields.io/github/release-date/nealhaddaway/citationchaser)
 ![GitHub R package version](https://img.shields.io/github/r-package/v/nealhaddaway/citationchaser)
+![GitHub last commit](https://img.shields.io/github/last-commit/nealhaddaway/citationchaser)
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/nealhaddaway/citationchaser?style=social)
 ![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fwww.twitter.com%2Fnealhaddaway)
