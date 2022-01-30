@@ -18,7 +18,7 @@ suppressPackageStartupMessages({
 
 options(shiny.sanitize.errors = TRUE)
 
-source('functions_new.R')
+source('functions.R')
 source('mixed_id_wrapper.R')
 
 # error supression CSS
