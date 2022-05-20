@@ -1,4 +1,4 @@
-# Contributing to PRISMA2020
+# Contributing to citationchaser
 
 The goal of this guide is to help you get up and contributing to citationchaser as 
 quickly as possible.
