@@ -336,11 +336,21 @@ get_refs <- function(article_list,
                             description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"),
                             publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_cit <- cit_results$data.publication_type
+
     authors_cit <- list()
     for (i in 1:length(cit_results$data.authors)) {
-      authors_cit <- unlist(c(authors_cit, paste0(cit_results$data.authors[[i]]$last_name, ', ',
-                                                  cit_results$data.authors[[i]]$first_name, collapse = '; ')))
+
+      authors_cit_next <- paste0(
+                           "AU  - ",
+                           cit_results$data.authors[[i]]$last_name,
+                           ', ',
+                           cit_results$data.authors[[i]]$first_name,
+                           '\n',
+                           collapse='')
+
+      authors_cit <- unlist(c(authors_cit, authors_cit_next))
     }
+
     title_cit <- cit_results$data.title
     year_cit <- cit_results$data.year_published
     abstract_cit <- cit_results$data.abstract
@@ -369,9 +379,9 @@ get_refs <- function(article_list,
                                                doi = doi_cit)
 
     # generate RIS file
-    level1_ris_cit <- paste(paste0('\n',
+    level1_ris_cit <- paste0('\n',
                                    'TY  - ', maditr::vlookup(publication_type_cit, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
-                                   'AU  - ', authors_cit, '\n',
+                                   authors_cit,
                                    'TI  - ', title_cit, '\n',
                                    'PY  - ', year_cit, '\n',
                                    'AB  - ', abstract_cit, '\n',
@@ -383,8 +393,8 @@ get_refs <- function(article_list,
                                    'PB  - ', publisher_cit, '\n',
                                    # 'SN  - ', issn_cit, '\n',
                                    'DO  - ', doi_cit, '\n',
-                                   'ER  - '),
-                            collapse = '\n')
+                                   'ER  - ',
+                                   sep='')
 
     # generate ris build report
     ris_records_cit <- lengths(regmatches(level1_ris_cit, gregexpr("TY  - ", level1_ris_cit)))
@@ -483,10 +493,19 @@ get_refs <- function(article_list,
                             description = c("abstract reference", "whole book reference", "book chapter reference", "computer program", "conference proceeding", "data file", "journal/periodical reference"),
                             publication_type = c("reference entry", "book", "book chapter", "component", "conference proceedings", "dataset", "journal article"))
     publication_type_ref <- ref_results$data.publication_type
+
     authors_ref <- list()
     for (i in 1:length(ref_results$data.authors)) {
-      authors_ref <- unlist(c(authors_ref, paste0(ref_results$data.authors[[i]]$last_name, ', ',
-                                                  ref_results$data.authors[[i]]$first_name, collapse = '; ')))
+
+      authors_ref_next <- paste0(
+        "AU  - ",
+        ref_results$data.authors[[i]]$last_name,
+        ', ',
+        ref_results$data.authors[[i]]$first_name,
+        '\n',
+        collapse='')
+
+      authors_ref <- unlist(c(authors_ref, authors_ref_next))
     }
     title_ref <- ref_results$data.title
     year_ref <- ref_results$data.year_published
@@ -514,22 +533,22 @@ get_refs <- function(article_list,
                                                end_page = end_page_ref,
                                                doi = doi_ref)
 
-    level1_ris_ref <- paste(paste0('\n',
-                                   'TY  - ', maditr::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
-                                   'AU  - ', authors_ref, '\n',
-                                   'TI  - ', title_ref, '\n',
-                                   'PY  - ', year_ref, '\n',
-                                   'AB  - ', abstract_ref, '\n',
-                                   'SP  - ', start_page_ref, '\n',
-                                   'EP  - ', end_page_ref, '\n',
-                                   'JF  - ', source_title_ref, '\n',
-                                   'VL  - ', volume_ref, '\n',
-                                   'IS  - ', issue_ref, '\n',
-                                   'PB  - ', publisher_ref, '\n',
-                                   # 'SN  - ', issn_ref, '\n',
-                                   'DO  - ', doi_ref, '\n',
-                                   'ER  - '),
-                            collapse = '\n')
+    level1_ris_ref <- paste('\n',
+                           'TY  - ', maditr::vlookup(publication_type_ref, type_list, result_column = 'type', lookup_column = 'publication_type'), '\n',
+                          authors_ref,
+                           'TI  - ', title_ref, '\n',
+                           'PY  - ', year_ref, '\n',
+                           'AB  - ', abstract_ref, '\n',
+                           'SP  - ', start_page_ref, '\n',
+                           'EP  - ', end_page_ref, '\n',
+                           'JF  - ', source_title_ref, '\n',
+                           'VL  - ', volume_ref, '\n',
+                           'IS  - ', issue_ref, '\n',
+                           'PB  - ', publisher_ref, '\n',
+                           # 'SN  - ', issn_ref, '\n',
+                           'DO  - ', doi_ref, '\n',
+                           'ER  - ',
+                           sep='')
 
     # ris build report
     ris_records_ref <- lengths(regmatches(level1_ris_ref, gregexpr("TY  - ", level1_ris_ref)))
