@@ -431,6 +431,7 @@ server <- function(input, output, session) {
             n_net$x$nodes$hyperlink<-paste0('https://www.lens.org/lens/search/scholar/list?q=lens_id:', Nodes$IDs, '&p=0&n=10&s=_score&d=%2B&f=false&e=false&l=en&authorField=author&dateFilterField=publishedYear&orderBy=%2B_score&presentation=false&stemmed=true&useAuthorId=false')
             n_net$x$options$clickAction = 'window.open(d.hyperlink)'
             n_net
+            #saveNetwork(n_net, "n_net.html", selfcontained = TRUE)
         }
     })
 }
